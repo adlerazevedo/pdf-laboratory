@@ -92,6 +92,14 @@ detalhes técnicos em [`docs/SECURITY.md`](docs/SECURITY.md).
 triagem do Dependabot e o passo manual único necessário no CodeQL antes
 da primeira publicação.
 
+## Publicação
+
+[`docs/PUBLISHING.md`](docs/PUBLISHING.md) — checklist de pré-publicação
+(segredos, `.gitignore`, governança, validação técnica — tudo já
+verificado neste repositório) e o passo a passo real para criar o
+repositório no GitHub e publicar, já que isso exige credenciais que esta
+ferramenta não tem.
+
 ## Arquitetura
 
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
