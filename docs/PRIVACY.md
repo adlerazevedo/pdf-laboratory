@@ -25,8 +25,11 @@ formulação mais precisa acima.
 - Não há telemetria, não há Google Analytics, não há pixels de rastreamento,
   por padrão.
 - Não há armazenamento permanente de documentos — nem em disco, nem em
-  `localStorage`, nem em IndexedDB (que é usado apenas para estado técnico
-  temporário, nunca para o conteúdo de um PDF).
+  `localStorage`, nem em IndexedDB. O código da própria aplicação nunca usa
+  IndexedDB/localStorage para guardar um documento ou seu conteúdo. A única
+  gravação em IndexedDB observada vem de dentro da biblioteca Tesseract.js
+  (ferramenta de OCR), que cacheia o modelo de idioma já baixado para não
+  precisar rebaixá-lo a cada execução — nunca o seu PDF.
 - Você pode verificar isso você mesmo: abra as Ferramentas do Desenvolvedor
   do navegador, aba "Rede" (Network), carregue um PDF e execute qualquer
   operação — nenhuma requisição deverá conter o conteúdo do seu arquivo.
