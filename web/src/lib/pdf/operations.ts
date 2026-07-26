@@ -555,3 +555,49 @@ export async function addVisualSignature(
 
   return doc.save();
 }
+
+export interface OcrWordPlacement {
+  text: string;
+  /** Canto inferior esquerdo da palavra, em pontos PDF (origem inferior esquerda da página). */
+  xPt: number;
+  yPt: number;
+  widthPt: number;
+  heightPt: number;
+}
+
+export interface OcrPageResult {
+  /** Índice 0-based da página original a receber a camada de texto. */
+  pageIndex: number;
+  words: OcrWordPlacement[];
+}
+
+/**
+ * Insere uma camada de texto pesquisável (invisível — opacidade 0) sobre as
+ * páginas indicadas, na posição de cada palavra reconhecida pelo OCR. Nunca
+ * substitui ou rasteriza o conteúdo original da página: o texto é apenas
+ * somado por cima, na posição correspondente, para permitir busca/seleção/
+ * cópia sem alterar a aparência visual do documento.
+ */
+export async function addSearchableTextLayer(
+  bytes: Uint8Array,
+  pages: OcrPageResult[],
+  onProgress?: ProgressCallback,
+  cancelToken?: CancelToken,
+): Promise<Uint8Array> {
+  const doc = await loadForEditing(bytes);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const docPages = doc.getPages();
+  for (let i = 0; i < pages.length; i++) {
+    checkCancelled(cancelToken);
+    const { pageIndex, words } = pages[i];
+    const page = docPages[pageIndex];
+    if (page) {
+      for (const word of words) {
+        const fontSize = Math.max(1, word.heightPt);
+        page.drawText(word.text, { x: word.xPt, y: word.yPt, size: fontSize, font, opacity: 0 });
+      }
+    }
+    report(onProgress, i + 1, pages.length, `Inserindo texto pesquisável (página ${pageIndex + 1})`);
+  }
+  return doc.save();
+}

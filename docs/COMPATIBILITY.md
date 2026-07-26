@@ -16,7 +16,7 @@ nesta versão; nunca aparece como botão ativo falso).
 | Imagens → PDF | Completo | Completo | Várias imagens, reordenação, tamanho de página, margem e ajuste conter/preencher |
 | PDF → imagens | Completo | Completo | Seleção de páginas, PNG/JPEG, resolução (DPI), qualidade JPEG, download individual ou em .zip |
 | Compressão/otimização básica | — | Parcial | Web: recomprime apenas imagens JPEG (DCTDecode) já embutidas no PDF, em 3 níveis (leve/média/forte); não toca fontes, texto ou vetores; não garante redução (documentos sem JPEG, ou já otimizados, podem não encolher); imagens com transparência (SMask) ou espaço de cor não-RGB/escala de cinza são deixadas intactas por segurança |
-| OCR (texto pesquisável) | Completo (OCRmyPDF + Tesseract) | — | Web: planejado via Tesseract.js em Web Worker; ainda não implementado |
+| OCR (texto pesquisável) | Completo (OCRmyPDF + Tesseract) | Parcial | Web: Tesseract.js (PT/EN), seleção de páginas, camada de texto invisível sobreposta ao original (nunca rasteriza a página); requer rede na primeira execução de cada idioma (baixa motor/modelo de uma CDN — nunca o documento); qualidade inferior ao OCRmyPDF do desktop |
 | Assinatura visual (carimbo) | Completo | Parcial | Web: texto, desenho à mão (canvas) ou imagem PNG/JPEG; posição (9 opções), tamanho e opacidade ajustáveis; seleção de páginas (todas/primeira/intervalo); aviso explícito de que não é assinatura digital; nunca solicita PFX/P12 |
 | Otimização avançada (Ghostscript) | Completo | — | Depende de binário instalado localmente; exclusivo do desktop |
 | Conversão Word/Excel/PowerPoint ↔ PDF | Completo (via LibreOffice) | — | Depende de binário instalado localmente; exclusivo do desktop |
@@ -35,6 +35,8 @@ nesta tabela, ela tem uma tela real conectada ao motor, sem limitações
 relevantes — não apenas a função existindo internamente. "Parcial" significa
 que a tela e o motor existem e são reais, mas com limitações genuínas
 descritas na coluna de notas (não é uma forma educada de dizer "incompleto").
-Ferramentas ainda marcadas como "—" na coluna Web (OCR) têm apenas
-planejamento ou motor parcial nesta fase; ver
-`docs/LIMITATIONS.md` para o estado exato de cada uma.
+Não há mais nenhuma ferramenta marcada como "—" na coluna Web só por falta
+de interface — as ferramentas restantes com "—" são exclusivas do aplicativo
+desktop por dependerem de binários nativos (Ghostscript, LibreOffice, qpdf)
+ou de certificados que nunca devem circular pelo navegador (assinatura
+digital). Ver `docs/LIMITATIONS.md` para o estado exato de cada ferramenta.

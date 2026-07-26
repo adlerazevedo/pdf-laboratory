@@ -62,3 +62,33 @@ export async function renderPageToCanvas(
     await loadingTask.destroy();
   }
 }
+
+/**
+ * Como `renderPageToCanvas`, mas também devolve o tamanho da página em
+ * pontos PDF (72 dpi) — necessário para converter as coordenadas de pixel
+ * retornadas pelo OCR de volta para coordenadas PDF ao montar a camada de
+ * texto pesquisável.
+ */
+export async function renderPageForOcr(
+  bytes: Uint8Array,
+  pageIndex: number,
+  dpi: number,
+): Promise<{ canvas: HTMLCanvasElement; pageWidthPt: number; pageHeightPt: number }> {
+  const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() });
+  try {
+    const doc = await loadingTask.promise;
+    const page = await doc.getPage(pageIndex + 1);
+    const basePt = page.getViewport({ scale: 1 });
+    const scale = dpi / 72;
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Não foi possível criar o contexto de renderização (canvas 2D).");
+    await page.render({ canvasContext: context, viewport }).promise;
+    return { canvas, pageWidthPt: basePt.width, pageHeightPt: basePt.height };
+  } finally {
+    await loadingTask.destroy();
+  }
+}

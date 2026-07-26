@@ -6,8 +6,22 @@ ferramenta.
 
 ## Web — o que ainda não existe
 
-- **OCR** ainda não foi implementado nesta versão web (planejado como
-  ferramenta de nível "limitado" — ver `web/src/data/tools.ts`).
+- **OCR** foi implementado e testado (unitário + end-to-end com Playwright
+  usando reconhecimento real de texto, ver `web/tests-e2e/ocr.spec.ts`),
+  via Tesseract.js. Limitações reais e deliberadas: (1) qualidade e
+  velocidade inferiores ao OCRmyPDF do aplicativo desktop; (2) na primeira
+  execução de cada idioma (PT/EN), o navegador precisa baixar o motor WASM
+  e o modelo de idioma de `cdn.jsdelivr.net` — isso exigiu abrir uma
+  exceção pontual na Content Security Policy do site (documentada em
+  `docs/SECURITY.md`), já que por padrão nenhuma requisição de rede além da
+  própria origem é permitida; (3) o texto reconhecido é sobreposto de forma
+  invisível (opacidade 0) sobre o conteúdo original — a página nunca é
+  rasterizada/substituída, então a aparência visual não muda, só passa a
+  ser pesquisável/selecionável; (4) o posicionamento do texto invisível
+  segue a caixa delimitadora (bounding box) de cada palavra reconhecida
+  pelo Tesseract.js, então pode não alinhar pixel-a-pixel com o texto
+  visível em todos os casos — isso não afeta a busca, só a precisão da
+  seleção manual de texto.
 - **Assinatura visual (carimbo)** foi implementada e testada (unitário +
   end-to-end com Playwright, incluindo o modo de desenho à mão via canvas,
   ver `web/tests-e2e/visual-signature.spec.ts`). É estritamente visual: sem

@@ -30,10 +30,16 @@ formulação mais precisa acima.
 - Você pode verificar isso você mesmo: abra as Ferramentas do Desenvolvedor
   do navegador, aba "Rede" (Network), carregue um PDF e execute qualquer
   operação — nenhuma requisição deverá conter o conteúdo do seu arquivo.
-- Quando uma funcionalidade futura precisar baixar um componente adicional
-  (por exemplo, um modelo de idioma para OCR via Tesseract.js), isso será
-  claramente identificado como "baixando um componente do aplicativo" — o
-  que é diferente de "enviando o seu documento".
+- **Exceção única e identificada**: a ferramenta de OCR baixa o motor
+  Tesseract.js (WASM) e o modelo do idioma escolhido (PT ou EN) de
+  `cdn.jsdelivr.net` na primeira execução de cada idioma — a interface
+  avisa isso claramente antes de você clicar em "Executar OCR". É "baixando
+  um componente do aplicativo", nunca "enviando o seu documento": o PDF
+  continua inteiramente no seu navegador, e você pode confirmar isso na
+  aba "Rede" das Ferramentas do Desenvolvedor — as únicas requisições
+  externas visíveis durante o OCR são para arquivos do próprio Tesseract.js
+  (motor e modelo), nunca para o conteúdo do seu PDF. Ver `docs/SECURITY.md`
+  para os detalhes técnicos e riscos dessa exceção à política "tudo local".
 - Um botão "Limpar sessão" permite descartar imediatamente todos os arquivos
   carregados na memória do navegador.
 

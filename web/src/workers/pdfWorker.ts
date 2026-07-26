@@ -3,6 +3,7 @@
 // para nunca travar a interface durante processamento (ver docs/WEB.md).
 import {
   addPageNumbers,
+  addSearchableTextLayer,
   addVisualSignature,
   addWatermark,
   compressBasic,
@@ -15,6 +16,7 @@ import {
   splitByRanges,
   type CompressionOptions,
   type ImagesToPdfOptions,
+  type OcrPageResult,
   type VisualSignatureOptions,
   type PageNumberOptions,
   type WatermarkOptions,
@@ -32,6 +34,7 @@ export type PdfWorkerRequest =
   | { id: string; kind: "setSimpleMetadata"; bytes: Uint8Array; meta: SimpleMetadata }
   | { id: string; kind: "compressBasic"; bytes: Uint8Array; options: CompressionOptions }
   | { id: string; kind: "addVisualSignature"; bytes: Uint8Array; options: VisualSignatureOptions }
+  | { id: string; kind: "addSearchableTextLayer"; bytes: Uint8Array; pages: OcrPageResult[] }
   | {
       id: string;
       kind: "imagesToPdf";
@@ -125,6 +128,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       }
       case "addVisualSignature": {
         const bytes = await addVisualSignature(msg.bytes, msg.options, onProgress, token);
+        response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "addSearchableTextLayer": {
+        const bytes = await addSearchableTextLayer(msg.bytes, msg.pages, onProgress, token);
         response = { id: msg.id, kind: "result", bytes };
         break;
       }

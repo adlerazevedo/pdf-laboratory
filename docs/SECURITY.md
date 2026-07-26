@@ -28,8 +28,10 @@ ser deliberadamente malicioso.
   `disableStream: true` — impede que um PDF malicioso dispare requisições de
   rede automáticas ao ser aberto.
 - **Content Security Policy restritiva** (`index.html`): sem `unsafe-eval`,
-  sem scripts de terceiros, `connect-src 'self'` (nenhuma requisição de rede
-  além da própria origem), `object-src 'none'`, `frame-ancestors 'none'`.
+  `object-src 'none'`, `frame-ancestors 'none'`. Por padrão, `script-src` e
+  `connect-src` são `'self'` (nenhum script de terceiro, nenhuma requisição
+  de rede além da própria origem) — com uma única exceção deliberada e
+  documentada abaixo, para a ferramenta de OCR.
 - **Sem `eval`, sem HTML não sanitizado**: a interface não usa
   `dangerouslySetInnerHTML` nem interpola HTML a partir de conteúdo de
   arquivos.
@@ -43,6 +45,37 @@ ser deliberadamente malicioso.
 - **Service Worker restrito**: o cache do PWA (Workbox) inclui apenas
   `**/*.{js,css,html,svg,woff2}` — documentos do usuário nunca passam pelo
   cache do service worker.
+
+### Exceção à CSP: motor de OCR (Tesseract.js) via CDN
+
+A ferramenta de OCR usa Tesseract.js, que precisa baixar seu motor (WASM) e
+os modelos de idioma (PT/EN) de `cdn.jsdelivr.net` na primeira execução de
+cada idioma — não há como evitar essa rede sem hospedar ~10 MB de arquivos
+binários dentro do próprio repositório (avaliado e adiado por ora). Por
+isso, `script-src`, `connect-src` e `worker-src` incluem `cdn.jsdelivr.net`
+como exceção **só para essa origem específica**, e `script-src` também
+inclui `'wasm-unsafe-eval'` (exigido pelo navegador para compilar/instanciar
+WebAssembly — diferente de `'unsafe-eval'`, não habilita `eval()`/
+`Function()` de strings JavaScript arbitrárias).
+
+O que isso implica, com honestidade:
+
+- **O PDF do usuário nunca é enviado a essa CDN** — só o motor/modelo do
+  Tesseract.js trafega por ali, nunca o conteúdo do documento sendo
+  processado. Isso é verificável: `addSearchableTextLayer` (a função que
+  recebe o texto reconhecido e monta o PDF final) roda inteiramente no
+  Web Worker local, sem qualquer chamada de rede.
+- **Isso introduz uma dependência de terceiro em tempo de execução.** Se
+  `cdn.jsdelivr.net` estiver fora do ar, a ferramenta de OCR não funciona
+  (as outras ferramentas continuam funcionando normalmente). Se a CDN fosse
+  comprometida, um invasor poderia teoricamente servir um script malicioso
+  sob esse domínio — um risco real de cadeia de suprimentos, mitigado pelo
+  fato de que jsdelivr serve pacotes npm publicados e versionados (a versão
+  exata do Tesseract.js/tesseract.js-core é fixada pelo `package.json`), mas
+  não eliminado.
+- Esta é a única exceção à política "tudo local" em toda a versão web —
+  todas as outras 12 ferramentas continuam 100% offline após o carregamento
+  inicial da página.
 
 ## Limitações conhecidas de segurança
 

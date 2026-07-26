@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import {
   addPageNumbers,
+  addSearchableTextLayer,
   addVisualSignature,
   addWatermark,
   compressBasic,
@@ -384,5 +385,84 @@ describe("addVisualSignature", () => {
     expect(optionsShape).not.toContain("certificate");
     expect(optionsShape).not.toContain("pfx");
     expect(optionsShape).not.toContain("p12");
+  });
+});
+
+describe("addSearchableTextLayer", () => {
+  function contentStreamSize(doc: PDFDocument, pageIndex: number): number {
+    const page = doc.getPages()[pageIndex];
+    const contents = page.node.Contents();
+    if (!contents) return 0;
+    const asArray = "asArray" in contents ? (contents as { asArray: () => unknown[] }).asArray() : [contents];
+    let total = 0;
+    for (const item of asArray) {
+      const resolved = "contents" in (item as object) ? item : doc.context.lookup(item as never);
+      total += (resolved as { contents?: Uint8Array })?.contents?.length ?? 0;
+    }
+    return total;
+  }
+
+  it("insere texto apenas nas páginas indicadas, preservando a contagem de páginas", async () => {
+    const bytes = await makeSyntheticPdf(3);
+    const before = await PDFDocument.load(bytes);
+    const beforeSizes = [0, 1, 2].map((i) => contentStreamSize(before, i));
+
+    const out = await addSearchableTextLayer(bytes, [
+      { pageIndex: 0, words: [{ text: "TESTE", xPt: 50, yPt: 700, widthPt: 60, heightPt: 12 }] },
+    ]);
+    const after = await PDFDocument.load(out);
+    expect(after.getPageCount()).toBe(3);
+    const afterSizes = [0, 1, 2].map((i) => contentStreamSize(after, i));
+    expect(afterSizes[0]).toBeGreaterThan(beforeSizes[0]);
+    expect(afterSizes[1]).toBe(beforeSizes[1]);
+    expect(afterSizes[2]).toBe(beforeSizes[2]);
+  });
+
+  it("lista de páginas vazia: não altera nada e continua abrindo normalmente", async () => {
+    const bytes = await makeSyntheticPdf(2);
+    const out = await addSearchableTextLayer(bytes, []);
+    const doc = await PDFDocument.load(out);
+    expect(doc.getPageCount()).toBe(2);
+  });
+
+  it("pageIndex fora do intervalo é ignorado com segurança (não lança erro)", async () => {
+    const bytes = await makeSyntheticPdf(2);
+    const out = await addSearchableTextLayer(bytes, [
+      { pageIndex: 99, words: [{ text: "X", xPt: 0, yPt: 0, widthPt: 10, heightPt: 10 }] },
+    ]);
+    const doc = await PDFDocument.load(out);
+    expect(doc.getPageCount()).toBe(2);
+  });
+});
+
+describe("flattenWords (OCR)", () => {
+  it("achata blocks→paragraphs→lines→words em uma lista simples", async () => {
+    const { flattenWords } = await import("./ocr");
+    const page = {
+      blocks: [
+        {
+          paragraphs: [
+            {
+              lines: [
+                { words: [{ text: "Olá", bbox: { x0: 0, y0: 0, x1: 10, y1: 10 } }, { text: "mundo", bbox: { x0: 12, y0: 0, x1: 30, y1: 10 } }] },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const words = flattenWords(page);
+    expect(words).toHaveLength(2);
+    expect(words[0].text).toBe("Olá");
+    expect(words[1].text).toBe("mundo");
+  });
+
+  it("ignora palavras em branco e blocks nulos", async () => {
+    const { flattenWords } = await import("./ocr");
+    expect(flattenWords({ blocks: null })).toEqual([]);
+    const page = {
+      blocks: [{ paragraphs: [{ lines: [{ words: [{ text: "   ", bbox: { x0: 0, y0: 0, x1: 1, y1: 1 } }] }] }] }],
+    };
+    expect(flattenWords(page)).toEqual([]);
   });
 });

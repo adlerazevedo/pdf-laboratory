@@ -12,6 +12,7 @@ import { PageNumbersTool } from "./components/tools/PageNumbersTool";
 import { MetadataTool } from "./components/tools/MetadataTool";
 import { CompressTool } from "./components/tools/CompressTool";
 import { VisualSignatureTool } from "./components/tools/VisualSignatureTool";
+import { OcrTool } from "./components/tools/OcrTool";
 import { PlaceholderTool } from "./components/tools/PlaceholderTool";
 import { TOOLS } from "./data/tools";
 import { hasActiveWork, resetSessionActivity } from "./lib/sessionActivity";
@@ -62,8 +63,9 @@ export default function App() {
         {tool?.id === "metadata" && <MetadataTool />}
         {tool?.id === "compress" && <CompressTool />}
         {tool?.id === "visual-signature" && <VisualSignatureTool />}
+        {tool?.id === "ocr" && <OcrTool />}
         {tool &&
-          !["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature"].includes(
+          !["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature", "ocr"].includes(
             tool.id,
           ) && <PlaceholderTool tool={tool} />}
       </div>
