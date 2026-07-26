@@ -4,6 +4,7 @@
 import {
   addPageNumbers,
   addWatermark,
+  compressBasic,
   extractPages,
   imagesToPdf,
   mergeDocuments,
@@ -11,6 +12,7 @@ import {
   setSimpleMetadata,
   splitByPageGroups,
   splitByRanges,
+  type CompressionOptions,
   type ImagesToPdfOptions,
   type PageNumberOptions,
   type WatermarkOptions,
@@ -26,6 +28,7 @@ export type PdfWorkerRequest =
   | { id: string; kind: "addWatermark"; bytes: Uint8Array; options: WatermarkOptions }
   | { id: string; kind: "addPageNumbers"; bytes: Uint8Array; options: PageNumberOptions }
   | { id: string; kind: "setSimpleMetadata"; bytes: Uint8Array; meta: SimpleMetadata }
+  | { id: string; kind: "compressBasic"; bytes: Uint8Array; options: CompressionOptions }
   | {
       id: string;
       kind: "imagesToPdf";
@@ -38,6 +41,7 @@ export type PdfWorkerResponse =
   | { id: string; kind: "progress"; done: number; total: number; stage: string }
   | { id: string; kind: "result"; bytes: Uint8Array }
   | { id: string; kind: "resultMany"; documents: Uint8Array[] }
+  | { id: string; kind: "resultCompression"; result: import("../lib/pdf/operations").CompressionResult }
   | { id: string; kind: "error"; message: string; name: string };
 
 const cancelTokens = new Map<string, { cancelled: boolean }>();
@@ -109,6 +113,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       case "imagesToPdf": {
         const bytes = await imagesToPdf(msg.images, onProgress, token, msg.options);
         response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "compressBasic": {
+        const result = await compressBasic(msg.bytes, msg.options, onProgress, token);
+        response = { id: msg.id, kind: "resultCompression", result };
         break;
       }
     }

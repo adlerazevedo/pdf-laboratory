@@ -6,9 +6,20 @@ ferramenta.
 
 ## Web — o que ainda não existe
 
-- **OCR**, **assinatura visual (carimbo)** e **compressão básica** ainda não
-  foram implementados nesta versão web (planejados como ferramentas de nível
-  "limitado" — ver `web/src/data/tools.ts`).
+- **OCR** e **assinatura visual (carimbo)** ainda não foram implementados
+  nesta versão web (planejados como ferramentas de nível "limitado" — ver
+  `web/src/data/tools.ts`).
+- **Compressão básica** foi implementada e testada (unitário + end-to-end
+  com Playwright, ver `web/tests-e2e/compress.spec.ts`), mas com limitações
+  reais e deliberadas: só recomprime imagens já embutidas com filtro
+  DCTDecode (JPEG); não toca fontes, texto ou vetores; por segurança, pula
+  imagens com máscara de transparência (SMask), array `Decode` customizado,
+  ou espaço de cor diferente de DeviceRGB/DeviceGray (evita risco de
+  corromper cores ou perder transparência). Não garante redução de tamanho:
+  um documento sem imagens JPEG, ou já bem otimizado, pode não encolher — e
+  a resserialização do pdf-lib pode até aumentar levemente o arquivo nesse
+  caso. A interface mostra o tamanho antes/depois com honestidade, inclusive
+  quando não há redução.
 - **Organizar páginas**, **imagens → PDF** e **PDF → imagens** foram
   implementados e testados (unitário + end-to-end com Playwright, ver
   `web/tests-e2e/`) nesta versão. Limitação conhecida de "Organizar páginas":

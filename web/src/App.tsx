@@ -10,6 +10,7 @@ import { PdfToImagesTool } from "./components/tools/PdfToImagesTool";
 import { WatermarkTool } from "./components/tools/WatermarkTool";
 import { PageNumbersTool } from "./components/tools/PageNumbersTool";
 import { MetadataTool } from "./components/tools/MetadataTool";
+import { CompressTool } from "./components/tools/CompressTool";
 import { PlaceholderTool } from "./components/tools/PlaceholderTool";
 import { TOOLS } from "./data/tools";
 import { hasActiveWork, resetSessionActivity } from "./lib/sessionActivity";
@@ -58,8 +59,9 @@ export default function App() {
         {tool?.id === "watermark" && <WatermarkTool />}
         {tool?.id === "page-numbers" && <PageNumbersTool />}
         {tool?.id === "metadata" && <MetadataTool />}
+        {tool?.id === "compress" && <CompressTool />}
         {tool &&
-          !["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata"].includes(
+          !["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress"].includes(
             tool.id,
           ) && <PlaceholderTool tool={tool} />}
       </div>

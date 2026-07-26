@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
+import { PDFDocument, PDFName, PDFDict, PDFRawStream, PDFRef, StandardFonts, degrees, rgb } from "pdf-lib";
 import type { CancelToken, OperationProgress, PageState, SimpleMetadata } from "./types";
 import { OperationCancelledError } from "./types";
 
@@ -310,4 +310,132 @@ export async function imagesToPdf(
     report(onProgress, i + 1, images.length, "Adicionando imagens");
   }
   return doc.save();
+}
+
+export type CompressionLevel = "light" | "medium" | "strong";
+
+export interface CompressionOptions {
+  level: CompressionLevel;
+}
+
+export interface CompressionResult {
+  bytes: Uint8Array;
+  imagesFound: number;
+  imagesRecompressed: number;
+  originalSize: number;
+  compressedSize: number;
+}
+
+interface CompressionSettings {
+  scale: number;
+  quality: number;
+}
+
+const COMPRESSION_LEVELS: Record<CompressionLevel, CompressionSettings> = {
+  light: { scale: 1, quality: 0.8 },
+  medium: { scale: 0.75, quality: 0.6 },
+  strong: { scale: 0.5, quality: 0.4 },
+};
+
+function hasWorkerImageApis(): boolean {
+  return typeof createImageBitmap === "function" && typeof OffscreenCanvas !== "undefined";
+}
+
+/**
+ * Compressão básica: recomprime SOMENTE imagens JPEG (filtro DCTDecode) já
+ * embutidas no PDF, reduzindo resolução e qualidade conforme o nível
+ * escolhido. Não é equivalente à otimização via Ghostscript do aplicativo
+ * desktop (que também remove fontes não usadas, otimiza streams de
+ * conteúdo, etc.) e não garante redução de tamanho — um PDF sem imagens
+ * JPEG, ou já bem otimizado, pode não encolher (e o próprio processo de
+ * resserialização do pdf-lib pode até aumentar levemente o arquivo nesse
+ * caso). Por segurança, imagens com máscara de transparência (SMask),
+ * array de Decode customizado, ou espaço de cor que não seja DeviceRGB/
+ * DeviceGray são deixadas intactas — evita risco de corromper cores ou
+ * perder transparência.
+ */
+export async function compressBasic(
+  bytes: Uint8Array,
+  options: CompressionOptions,
+  onProgress?: ProgressCallback,
+  cancelToken?: CancelToken,
+): Promise<CompressionResult> {
+  const settings = COMPRESSION_LEVELS[options.level];
+  const doc = await loadForEditing(bytes);
+
+  const seenRefs = new Set<string>();
+  const candidateRefs: PDFRef[] = [];
+  for (const page of doc.getPages()) {
+    const resources = page.node.Resources();
+    const xobjDict = resources?.lookup(PDFName.of("XObject"), PDFDict);
+    if (!xobjDict) continue;
+    for (const key of xobjDict.keys()) {
+      const ref = xobjDict.get(key);
+      if (!(ref instanceof PDFRef) || seenRefs.has(ref.tag)) continue;
+      seenRefs.add(ref.tag);
+      const obj = doc.context.lookup(ref);
+      if (!(obj instanceof PDFRawStream)) continue;
+      const subtype = obj.dict.get(PDFName.of("Subtype"));
+      const filter = obj.dict.get(PDFName.of("Filter"));
+      const smask = obj.dict.get(PDFName.of("SMask"));
+      const decode = obj.dict.get(PDFName.of("Decode"));
+      const colorSpace = obj.dict.get(PDFName.of("ColorSpace"));
+      const colorSpaceOk = !colorSpace || colorSpace.toString() === "/DeviceRGB" || colorSpace.toString() === "/DeviceGray";
+      if (subtype?.toString() !== "/Image") continue;
+      if (!filter || filter.toString() !== "/DCTDecode") continue;
+      if (smask || decode || !colorSpaceOk) continue;
+      candidateRefs.push(ref);
+    }
+  }
+
+  if (candidateRefs.length > 0 && !hasWorkerImageApis()) {
+    throw new Error("Este navegador não oferece as APIs necessárias (OffscreenCanvas/createImageBitmap) para a compressão básica.");
+  }
+
+  let imagesRecompressed = 0;
+  for (let i = 0; i < candidateRefs.length; i++) {
+    checkCancelled(cancelToken);
+    const ref = candidateRefs[i];
+    const streamObj = doc.context.lookup(ref);
+    if (!(streamObj instanceof PDFRawStream)) continue;
+    const stream = streamObj;
+    try {
+      const bitmap = await createImageBitmap(new Blob([stream.contents], { type: "image/jpeg" }));
+      const newWidth = Math.max(1, Math.round(bitmap.width * settings.scale));
+      const newHeight = Math.max(1, Math.round(bitmap.height * settings.scale));
+      const canvas = new OffscreenCanvas(newWidth, newHeight);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Contexto 2D indisponível.");
+      ctx.drawImage(bitmap, 0, 0, newWidth, newHeight);
+      bitmap.close();
+      const outBlob = await canvas.convertToBlob({ type: "image/jpeg", quality: settings.quality });
+      const newBytes = new Uint8Array(await outBlob.arrayBuffer());
+      if (newBytes.length < stream.contents.length) {
+        const newDict = doc.context.obj({
+          Type: "XObject",
+          Subtype: "Image",
+          Width: newWidth,
+          Height: newHeight,
+          ColorSpace: "DeviceRGB",
+          BitsPerComponent: 8,
+          Filter: "DCTDecode",
+          Length: newBytes.length,
+        });
+        doc.context.assign(ref, PDFRawStream.of(newDict, newBytes));
+        imagesRecompressed++;
+      }
+    } catch {
+      // Decodificação falhou (formato inesperado) — mantém a imagem original intacta.
+    }
+    report(onProgress, i + 1, candidateRefs.length, `Recomprimindo imagem ${i + 1} de ${candidateRefs.length}`);
+  }
+
+  const compressedBytes = await doc.save();
+  return {
+    bytes: compressedBytes,
+    imagesFound: candidateRefs.length,
+    imagesRecompressed,
+    originalSize: bytes.length,
+    compressedSize: compressedBytes.length,
+  };
 }
