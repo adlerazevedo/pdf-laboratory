@@ -67,21 +67,68 @@ aplicação (JS/CSS/HTML/SVG/fontes) — nunca documentos do usuário.
 ## Estado real dos testes (honestidade sobre o que foi executado)
 
 - **Vitest (unitário/componente):** executado neste ambiente de
-  desenvolvimento — 21 testes, todos passando (`operations.ts`, `validation.ts`,
-  `parseRanges.ts`, `HomeScreen.tsx`).
+  desenvolvimento — 67 testes, todos passando, cobrindo o motor de PDF
+  (`operations.ts`, incluindo compressão, assinatura visual e OCR),
+  validação de arquivo, parsing de intervalos de página e `HomeScreen.tsx`.
+  (Nota: esta seção descreve o essencial; para o inventário completo e
+  atualizado de ferramentas ver `docs/COMPATIBILITY.md` — uma reescrita
+  completa deste documento está prevista numa fase de documentação futura.)
 - **Lint (`oxlint`) e checagem de tipos (`tsc -b`):** executados neste
   ambiente — sem erros.
 - **Build de produção (`vite build`):** executado neste ambiente — sucesso,
   incluindo geração do service worker e do manifesto PWA.
-- **Playwright + axe-core (E2E/acessibilidade):** os testes foram
-  **escritos e configurados** (`web/tests-e2e/home.spec.ts`), mas **não foi
-  possível executá-los no ambiente de desenvolvimento usado para construir
-  este projeto**, porque o sandbox não tem permissão para instalar as
-  bibliotecas de sistema do Chromium (`libXdamage`, etc.) sem privilégios de
-  root. Eles rodam automaticamente no workflow `web-tests.yml` em um runner
-  do GitHub Actions com privilégios completos. **Não afirme que os testes E2E
-  passaram até que o workflow correspondente tenha rodado com sucesso no
-  GitHub.**
+- **Playwright + axe-core (E2E/acessibilidade):** ao contrário do que este
+  documento afirmava antes, os testes **foram de fato executados neste
+  ambiente**, não só escritos: o Chromium headless do sandbox tinha uma
+  dependência de sistema faltando (`libXdamage.so.1`) e não há privilégio de
+  root para instalar via `apt`; contornado extraindo o `.deb` já baixado com
+  `dpkg-deb -x` (sem privilégio) e apontando via `LD_LIBRARY_PATH` só para os
+  processos de teste — nenhuma mudança de sistema, nenhum pacote instalado
+  globalmente. A suíte completa (9 arquivos de spec, cobrindo cada
+  ferramenta, a tela inicial, a página Web × Desktop e o layout responsivo)
+  roda de verdade contra um build de produção real. O workflow
+  `web-tests.yml` do GitHub Actions continua sendo a fonte de verdade formal
+  para CI (esse workaround não está automatizado lá), mas não é mais correto
+  dizer que os testes "nunca rodaram" neste projeto.
+
+## Acessibilidade e responsividade (Fase 6)
+
+Auditoria real feita com axe-core (`@axe-core/playwright`) contra todas as
+telas (inicial, cada ferramenta, Web × Desktop), nos temas claro e escuro, e
+em duas larguras de viewport (1280px e 375px). Achados reais corrigidos:
+
+- **Contraste de cor insuficiente** (regra `color-contrast`, WCAG 1.4.3):
+  o selo "COM LIMITAÇÕES" e o título de `InlineAlert` no nível "warning" só
+  alcançavam 3.64:1 em tema claro (abaixo do 4.5:1 exigido para texto
+  normal) — `--warning` escurecido para 5.37:1. Em tema escuro, texto branco
+  sobre `.btn-primary` (2.99:1) e sobre o hover de `.btn-danger` (3.27:1)
+  também falhavam — criados tokens `--accent-solid`/`--accent-solid-hover`/
+  `--danger-solid`, com tons próprios só para fundo sólido com texto branco,
+  sem alterar `--accent`/`--danger` usados como texto (que já eram
+  compatíveis). Ver `web/src/styles/tokens.css`.
+- **Controles interativos aninhados** (regra `nested-interactive`, WCAG
+  4.1.2): `DropZone.tsx` envolvia um `<button>` real dentro de um
+  `<div role="button" tabIndex={0}>` — confundia navegação por Tab e
+  leitores de tela em toda ferramenta que recebe arquivo. Removido o
+  role/tabIndex/onKeyDown redundante do `<div>`; o `<button>` interno
+  "Selecionar arquivos" passou a ser o único controle de teclado real.
+- **Layout quebrado em telas estreitas**: sem nenhuma media query no
+  projeto, em ≤375px de largura o cabeçalho estourava (botão de tema
+  cortado, textos quebrando em várias linhas) e a barra lateral fixa de
+  260px espremia o conteúdo principal — confirmado com captura de tela real
+  antes da correção. Adicionado um breakpoint em 640px: abaixo dele, a barra
+  lateral vira uma gaveta (off-canvas) acionada por um botão de menu no
+  cabeçalho, com fundo escurecido, fechamento por Esc/clique fora/seleção de
+  ferramenta, e o texto do selo de privacidade e do botão "Limpar sessão"
+  passam a ficar só para leitor de tela (ícone permanece visível). Ver
+  `web/src/components/AppShell.tsx` e o bloco `@media` em
+  `web/src/styles/global.css`.
+
+Cobertura de teste real para essas correções: `web/tests-e2e/responsive.spec.ts`
+(8 testes: gaveta abre/fecha por botão, backdrop e Esc; navegação fecha a
+gaveta; cabeçalho não estoura em 375px; sem violações críticas/sérias com a
+gaveta aberta) e reexecução de toda a suíte Playwright existente para
+confirmar ausência de regressão.
 
 ## Limites de desempenho
 

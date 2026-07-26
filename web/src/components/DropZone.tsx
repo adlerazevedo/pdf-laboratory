@@ -51,13 +51,17 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
     <div
       id="DropArea"
       data-state={state}
-      role="button"
-      tabIndex={0}
-      aria-label="Área para soltar ou selecionar arquivos"
+      // Não é role="button": o controle de teclado/leitor de tela real é o
+      // <button> "Selecionar arquivos" logo abaixo. Um <div role="button">
+      // envolvendo um <button> nativo é "interactive controls nested"
+      // (regra axe-core nested-interactive, achado real nesta auditoria) —
+      // confunde navegação por Tab e leitores de tela. onClick aqui é só
+      // conveniência de mouse (clicar em qualquer parte da área, não só no
+      // botão); quem usa teclado já alcança o botão real via Tab normalmente.
+      // Sem aria-label aqui: div sem role não tem nome anunciado por leitores
+      // de tela mesmo assim, e o conteúdo visível (texto + botão nomeado) já
+      // descreve a área.
       onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
-      }}
       onDragOver={(e) => {
         e.preventDefault();
         setState("dragging");

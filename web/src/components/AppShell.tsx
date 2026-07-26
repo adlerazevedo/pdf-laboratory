@@ -13,6 +13,7 @@ interface AppShellProps {
 
 export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClearSession, children }: AppShellProps) {
   const [theme, setTheme] = useState<ThemeName>("light");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const initial = getPreferredTheme();
@@ -20,14 +21,31 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
     applyTheme(initial);
   }, []);
 
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSidebarOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
+
   function toggleTheme() {
     const next: ThemeName = theme === "light" ? "dark" : "light";
     setTheme(next);
     applyTheme(next);
   }
 
+  // Em telas largas o CSS ignora o atributo data-open (a barra lateral fica
+  // sempre visível); só em telas <=640px o menu vira uma gaveta controlada
+  // por este estado (ver @media em global.css).
+  function navigateAndCloseSidebar(id: string) {
+    onNavigateTool(id);
+    setSidebarOpen(false);
+  }
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gridTemplateRows: "auto 1fr", height: "100%" }}>
+    <div className="app-shell-grid">
       <header
         id="AppHeader"
         style={{
@@ -39,17 +57,32 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
           height: 56,
           borderBottom: "1px solid var(--border)",
           background: "var(--surface)",
+          position: "relative",
+          zIndex: 41,
         }}
       >
-        <button type="button" onClick={onNavigateHome} className="btn-text" style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 15, color: "var(--text)", padding: 0 }}>
-          PDF Laboratory
-        </button>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-          <span className="text-muted" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-            <Icon kind="shield" size={14} /> Processamento local no navegador
+          <button
+            type="button"
+            id="MenuToggle"
+            className="btn"
+            aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={sidebarOpen}
+            aria-controls="Sidebar"
+            onClick={() => setSidebarOpen((v) => !v)}
+          >
+            <Icon kind={sidebarOpen ? "close" : "menu"} size={18} />
+          </button>
+          <button type="button" onClick={onNavigateHome} className="btn-text" style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 15, color: "var(--text)", padding: 0 }}>
+            PDF Laboratory
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+          <span className="text-muted" title="Processamento local no navegador" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            <Icon kind="shield" size={14} /> <span id="PrivacyBadgeText">Processamento local no navegador</span>
           </span>
-          <button type="button" className="btn" onClick={onClearSession} title="Limpar sessão">
-            <Icon kind="trash" size={16} /> Limpar sessão
+          <button type="button" className="btn" onClick={onClearSession} title="Limpar sessão" aria-label="Limpar sessão">
+            <Icon kind="trash" size={16} /> <span id="ClearSessionLabel">Limpar sessão</span>
           </button>
           <button type="button" className="btn" onClick={toggleTheme} aria-label="Alternar tema">
             <Icon kind={theme === "light" ? "moon" : "sun"} size={16} />
@@ -57,8 +90,17 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
         </div>
       </header>
 
+      <button
+        type="button"
+        id="SidebarBackdrop"
+        data-open={sidebarOpen}
+        aria-label="Fechar menu"
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <nav
         id="Sidebar"
+        data-open={sidebarOpen}
         style={{
           borderRight: "1px solid var(--border)",
           background: "var(--surface)",
@@ -76,7 +118,7 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
               <button
                 type="button"
                 disabled={tool.availability === "desktop-only"}
-                onClick={() => onNavigateTool(tool.id)}
+                onClick={() => navigateAndCloseSidebar(tool.id)}
                 style={{
                   width: "100%",
                   textAlign: "left",
@@ -99,7 +141,7 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
           <button
             type="button"
             id="WebDesktopLink"
-            onClick={() => onNavigateTool("web-desktop")}
+            onClick={() => navigateAndCloseSidebar("web-desktop")}
             style={{
               width: "100%",
               textAlign: "left",
