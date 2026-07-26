@@ -1,6 +1,15 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+async function readDownloadBytes(download: import("@playwright/test").Download): Promise<Buffer> {
+  const path = await download.path();
+  if (!path) throw new Error("download path unavailable");
+  return readFileSync(path);
+}
 
 const FIXTURE = join(import.meta.dirname, "../../shared/test-fixtures/generated/sintetico-3-paginas.pdf");
 
@@ -22,6 +31,19 @@ test("PDF em imagens: exporta páginas selecionadas em PNG e baixa tudo em .zip"
     page.getByRole("button", { name: /Baixar tudo/ }).click(),
   ]);
   expect(download.suggestedFilename()).toMatch(/-imagens\.zip$/);
+
+  // Integridade real do .zip baixado: 3 entradas, cada uma um PNG de verdade
+  // (assinatura de arquivo PNG conferida byte a byte, não só a extensão).
+  const zipBytes = await readDownloadBytes(download);
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(zipBytes);
+  const entries = Object.values(zip.files).filter((f) => !f.dir);
+  expect(entries).toHaveLength(3);
+  for (const entry of entries) {
+    expect(entry.name).toMatch(/\.png$/);
+    const content = await entry.async("nodebuffer");
+    expect(content.subarray(0, 8).equals(PNG_SIGNATURE)).toBe(true);
+  }
 });
 
 test("PDF em imagens: exportar apenas a página 2 gera uma única imagem", async ({ page }) => {

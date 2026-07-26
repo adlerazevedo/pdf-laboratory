@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { PDFDocument } from "pdf-lib";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -99,7 +99,7 @@ test("OCR: reconhece texto real de uma imagem e gera uma camada pesquisável", a
   expect(download.suggestedFilename()).toMatch(/-pesquisavel\.pdf$/);
 
   const downloadPath = await download.path();
-  const outBytes = downloadPath ? Buffer.from(require("node:fs").readFileSync(downloadPath)) : null;
+  const outBytes = downloadPath ? Buffer.from(readFileSync(downloadPath)) : null;
   expect(outBytes).not.toBeNull();
 
   const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");

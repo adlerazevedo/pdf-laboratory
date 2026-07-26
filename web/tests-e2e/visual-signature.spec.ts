@@ -1,6 +1,35 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
+async function readDownloadBytes(download: import("@playwright/test").Download): Promise<Buffer> {
+  const path = await download.path();
+  if (!path) throw new Error("download path unavailable");
+  return readFileSync(path);
+}
+
+async function extractPageTexts(bytes: Buffer): Promise<string[]> {
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(bytes), useWorkerFetch: false, isEvalSupported: false });
+  const doc = await loadingTask.promise;
+  const texts: string[] = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    texts.push(content.items.map((it: { str?: string }) => it.str ?? "").join(" "));
+  }
+  return texts;
+}
+
+async function pageHasEmbeddedImage(pdfDoc: import("pdf-lib").PDFDocument, pageIndex: number): Promise<boolean> {
+  const { PDFName, PDFDict } = await import("pdf-lib");
+  const page = pdfDoc.getPage(pageIndex);
+  const resources = page.node.Resources();
+  const xObject = resources?.lookup(PDFName.of("XObject"));
+  if (!xObject || !(xObject instanceof PDFDict)) return false;
+  return xObject.keys().length > 0;
+}
 
 const FIXTURE = join(import.meta.dirname, "../../shared/test-fixtures/generated/sintetico-3-paginas.pdf");
 
@@ -20,6 +49,15 @@ test("assinatura visual: modo texto, aplicada só na primeira página, baixa o r
     }),
   ]);
   expect(download.suggestedFilename()).toMatch(/-assinado-visualmente\.pdf$/);
+
+  // Integridade real: o carimbo de texto aparece SÓ na primeira página —
+  // as outras duas permanecem com apenas o conteúdo original.
+  const bytes = await readDownloadBytes(download);
+  const texts = await extractPageTexts(bytes);
+  expect(texts[0]).toContain("Assinado eletronicamente");
+  expect(texts[0]).toMatch(/Pagina 1 de 3/);
+  expect(texts[1]).not.toContain("Assinado eletronicamente");
+  expect(texts[2]).not.toContain("Assinado eletronicamente");
 });
 
 test("assinatura visual: modo desenhar, captura o traço como imagem e aplica", async ({ page }) => {
@@ -46,6 +84,17 @@ test("assinatura visual: modo desenhar, captura o traço como imagem e aplica", 
     }),
   ]);
   expect(download.suggestedFilename()).toMatch(/-assinado-visualmente\.pdf$/);
+
+  // Integridade real: o traço desenhado é aplicado como imagem embutida de
+  // verdade (não como texto) — confere que uma imagem foi de fato anexada
+  // aos recursos de ao menos uma página (o padrão é aplicar em todas).
+  const bytes = await readDownloadBytes(download);
+  const { PDFDocument } = await import("pdf-lib");
+  const doc = await PDFDocument.load(bytes);
+  const pagesWithImage = await Promise.all(
+    Array.from({ length: doc.getPageCount() }, (_, i) => pageHasEmbeddedImage(doc, i)),
+  );
+  expect(pagesWithImage.some(Boolean)).toBe(true);
 });
 
 test("assinatura visual: intervalo de páginas inválido mostra erro e bloqueia o envio", async ({ page }) => {

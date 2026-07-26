@@ -10,7 +10,15 @@ const TINY_JPEG_B64 =
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAEAAQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlKKKK8g/RT//Z";
 
 async function writeFixture(): Promise<string> {
-  const jpegBytes = Buffer.from(TINY_JPEG_B64, "base64");
+  // Buffer.from(base64) pode devolver uma view dentro do pool interno de 8 KB do
+  // Node (byteOffset != 0) para buffers pequenos. pdf-lib's JpegEmbedder lê
+  // `imageData.buffer` diretamente (ignora byteOffset), então herdar uma view
+  // pool-alocada faz o parser ler o offset errado do ArrayBuffer subjacente e
+  // falhar com "SOI not found in JPEG" — de forma intermitente, dependendo do
+  // estado do pool no momento. Corrigido copiando para um ArrayBuffer próprio
+  // que sempre começa em byteOffset 0.
+  const raw = Buffer.from(TINY_JPEG_B64, "base64");
+  const jpegBytes = new Uint8Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const img = await doc.embedJpg(jpegBytes);

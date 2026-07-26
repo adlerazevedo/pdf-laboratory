@@ -1,8 +1,23 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+async function readDownloadBytes(download: import("@playwright/test").Download): Promise<Buffer> {
+  const path = await download.path();
+  if (!path) throw new Error("download path unavailable");
+  return readFileSync(path);
+}
+
+async function pageHasEmbeddedImage(pdfDoc: import("pdf-lib").PDFDocument, pageIndex: number): Promise<boolean> {
+  const { PDFName, PDFDict } = await import("pdf-lib");
+  const page = pdfDoc.getPage(pageIndex);
+  const resources = page.node.Resources();
+  const xObject = resources?.lookup(PDFName.of("XObject"));
+  if (!xObject || !(xObject instanceof PDFDict)) return false;
+  return xObject.keys().length > 0;
+}
 
 // PNG 1x1 e JPEG 4x4 sintéticos, gerados uma vez por execução — nunca imagens reais.
 const TINY_PNG = Buffer.from(
@@ -44,6 +59,18 @@ test("imagens em PDF: várias imagens, layout A4 paisagem preenchendo a página,
     }),
   ]);
   expect(download.suggestedFilename()).toBe("imagens-para-pdf.pdf");
+
+  // Integridade real do arquivo baixado: 2 imagens -> 2 páginas, cada uma
+  // com uma imagem de verdade embutida (não páginas em branco ou só texto).
+  const bytes = await readDownloadBytes(download);
+  const { PDFDocument } = await import("pdf-lib");
+  const doc = await PDFDocument.load(bytes);
+  expect(doc.getPageCount()).toBe(2);
+  expect(await pageHasEmbeddedImage(doc, 0)).toBe(true);
+  expect(await pageHasEmbeddedImage(doc, 1)).toBe(true);
+  // Layout "a4 paisagem": página mais larga que alta.
+  const { width, height } = doc.getPage(0).getSize();
+  expect(width).toBeGreaterThan(height);
 });
 
 test("imagens em PDF: remover uma imagem antes de gerar reduz a contagem", async ({ page }) => {
