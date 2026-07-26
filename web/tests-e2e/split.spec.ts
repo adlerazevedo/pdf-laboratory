@@ -6,9 +6,12 @@ const FIXTURE_10 = join(import.meta.dirname, "../../shared/test-fixtures/generat
 
 async function openSplitWithFixture(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: "Dividir PDF", exact: true }).click();
+  await page.getByRole("button", { name: "Dividir PDF", exact: true }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE_10);
-  await expect(page.getByText("10 páginas")).toBeVisible({ timeout: 15_000 });
+  // "— 10 páginas" (com travessão, sem parênteses) identifica a linha de
+  // informação do arquivo — distinta de "(10 páginas)" que também aparece
+  // no item de intervalo padrão da lista de exportação.
+  await expect(page.getByText("— 10 páginas")).toBeVisible({ timeout: 15_000 });
 }
 
 test("dividir PDF: cada página em um arquivo, baixa um .zip com 10 partes", async ({ page }) => {

@@ -94,6 +94,30 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
             </li>
           ))}
         </ul>
+
+        <div style={{ marginTop: "var(--space-4)", paddingTop: "var(--space-3)", borderTop: "1px solid var(--border)" }}>
+          <button
+            type="button"
+            id="WebDesktopLink"
+            onClick={() => onNavigateTool("web-desktop")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              background: activeToolId === "web-desktop" ? "var(--surface-2)" : "transparent",
+              border: "none",
+              borderRadius: "var(--radius-sm)",
+              padding: "8px 10px",
+              cursor: "pointer",
+              color: "var(--text-2)",
+              fontSize: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Icon kind="info" size={14} /> Web × Desktop: qual usar?
+          </button>
+        </div>
       </nav>
 
       <main style={{ overflowY: "auto", padding: "var(--space-6)" }}>{children}</main>

@@ -26,7 +26,7 @@ function writeTinyImages(): { png: string; jpg: string } {
 test("imagens em PDF: várias imagens, layout A4 paisagem preenchendo a página, gera e baixa", async ({ page }) => {
   const { png, jpg } = writeTinyImages();
   await page.goto("/");
-  await page.getByRole("button", { name: "Imagens em PDF" }).click();
+  await page.getByRole("button", { name: "Imagens em PDF" }).first().click();
   await page.setInputFiles('input[type="file"]', [png, jpg]);
 
   await expect(page.getByText("2 imagens")).toBeVisible({ timeout: 15_000 });
@@ -49,7 +49,7 @@ test("imagens em PDF: várias imagens, layout A4 paisagem preenchendo a página,
 test("imagens em PDF: remover uma imagem antes de gerar reduz a contagem", async ({ page }) => {
   const { png, jpg } = writeTinyImages();
   await page.goto("/");
-  await page.getByRole("button", { name: "Imagens em PDF" }).click();
+  await page.getByRole("button", { name: "Imagens em PDF" }).first().click();
   await page.setInputFiles('input[type="file"]', [png, jpg]);
   await expect(page.getByText("2 imagens")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Remover imagem 1" }).click();
@@ -59,7 +59,7 @@ test("imagens em PDF: remover uma imagem antes de gerar reduz a contagem", async
 test("imagens em PDF: sem violações críticas de acessibilidade", async ({ page }) => {
   const { png } = writeTinyImages();
   await page.goto("/");
-  await page.getByRole("button", { name: "Imagens em PDF" }).click();
+  await page.getByRole("button", { name: "Imagens em PDF" }).first().click();
   await page.setInputFiles('input[type="file"]', [png]);
   await expect(page.getByText("1 imagem")).toBeVisible({ timeout: 15_000 });
   const results = await new AxeBuilder({ page }).analyze();

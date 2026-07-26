@@ -6,7 +6,7 @@ const FIXTURE = join(import.meta.dirname, "../../shared/test-fixtures/generated/
 
 test("organizar páginas: miniaturas, rotação, duplicação, exclusão, página em branco, desfazer e salvar", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Organizar páginas" }).click();
+  await page.getByRole("button", { name: "Organizar páginas" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
 
   await expect(page.getByRole("button", { name: "Selecionar todas" })).toBeVisible({ timeout: 15_000 });
@@ -37,7 +37,7 @@ test("organizar páginas: miniaturas, rotação, duplicação, exclusão, págin
 
 test("organizar páginas: bloqueia salvar quando todas as páginas são excluídas", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Organizar páginas" }).click();
+  await page.getByRole("button", { name: "Organizar páginas" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE.replace("3-paginas", "1-pagina"));
   await expect(page.getByRole("button", { name: "Selecionar todas" })).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "Excluir página 1" }).click();
@@ -47,7 +47,7 @@ test("organizar páginas: bloqueia salvar quando todas as páginas são excluíd
 
 test("organizar páginas: sem violações críticas de acessibilidade", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Organizar páginas" }).click();
+  await page.getByRole("button", { name: "Organizar páginas" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
   await expect(page.getByRole("button", { name: "Selecionar todas" })).toBeVisible({ timeout: 15_000 });
   const results = await new AxeBuilder({ page }).analyze();

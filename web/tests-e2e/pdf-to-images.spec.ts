@@ -6,7 +6,7 @@ const FIXTURE = join(import.meta.dirname, "../../shared/test-fixtures/generated/
 
 test("PDF em imagens: exporta páginas selecionadas em PNG e baixa tudo em .zip", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "PDF em imagens" }).click();
+  await page.getByRole("button", { name: "PDF em imagens" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
 
   await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
@@ -26,7 +26,7 @@ test("PDF em imagens: exporta páginas selecionadas em PNG e baixa tudo em .zip"
 
 test("PDF em imagens: exportar apenas a página 2 gera uma única imagem", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "PDF em imagens" }).click();
+  await page.getByRole("button", { name: "PDF em imagens" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
   await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
   await page.getByLabel(/Páginas a exportar/).fill("2");
@@ -36,7 +36,7 @@ test("PDF em imagens: exportar apenas a página 2 gera uma única imagem", async
 
 test("PDF em imagens: intervalo de páginas inválido mostra erro claro", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "PDF em imagens" }).click();
+  await page.getByRole("button", { name: "PDF em imagens" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
   await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
   await page.getByLabel(/Páginas a exportar/).fill("99");
@@ -46,7 +46,7 @@ test("PDF em imagens: intervalo de páginas inválido mostra erro claro", async 
 
 test("PDF em imagens: sem violações críticas de acessibilidade", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "PDF em imagens" }).click();
+  await page.getByRole("button", { name: "PDF em imagens" }).first().click();
   await page.setInputFiles('input[type="file"]', FIXTURE);
   await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
   const results = await new AxeBuilder({ page }).analyze();

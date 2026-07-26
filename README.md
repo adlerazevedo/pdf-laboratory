@@ -53,7 +53,9 @@ Ver a tabela completa, ferramenta por ferramenta, em
 extrair páginas, marca d'água, numeração de páginas e edição de metadados
 funcionam nas duas versões. Ferramentas que dependem de binários nativos ou
 de material sensível (certificados digitais) permanecem exclusivas do
-desktop — nunca aparecem como botão ativo falso na web.
+desktop — nunca aparecem como botão ativo falso na web. A própria versão web
+tem uma página "Web × Desktop", acessível pela barra lateral, explicando essa
+diferença e como obter o desktop.
 
 ## Privacidade
 

@@ -13,6 +13,7 @@ import { MetadataTool } from "./components/tools/MetadataTool";
 import { CompressTool } from "./components/tools/CompressTool";
 import { VisualSignatureTool } from "./components/tools/VisualSignatureTool";
 import { OcrTool } from "./components/tools/OcrTool";
+import { WebDesktopScreen } from "./components/WebDesktopScreen";
 import { PlaceholderTool } from "./components/tools/PlaceholderTool";
 import { TOOLS } from "./data/tools";
 import { hasActiveWork, resetSessionActivity } from "./lib/sessionActivity";
@@ -51,7 +52,8 @@ export default function App() {
       onClearSession={clearSession}
     >
       <div key={sessionKey}>
-        {!tool && <HomeScreen onSelectTool={setActiveToolId} />}
+        {!tool && activeToolId !== "web-desktop" && <HomeScreen onSelectTool={setActiveToolId} />}
+        {activeToolId === "web-desktop" && <WebDesktopScreen />}
         {tool?.id === "merge" && <MergeTool />}
         {tool?.id === "split" && <SplitTool />}
         {tool?.id === "organize" && <OrganizeTool />}

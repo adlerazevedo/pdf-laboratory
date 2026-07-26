@@ -36,7 +36,15 @@ relevantes — não apenas a função existindo internamente. "Parcial" signific
 que a tela e o motor existem e são reais, mas com limitações genuínas
 descritas na coluna de notas (não é uma forma educada de dizer "incompleto").
 Não há mais nenhuma ferramenta marcada como "—" na coluna Web só por falta
-de interface — as ferramentas restantes com "—" são exclusivas do aplicativo
-desktop por dependerem de binários nativos (Ghostscript, LibreOffice, qpdf)
-ou de certificados que nunca devem circular pelo navegador (assinatura
-digital). Ver `docs/LIMITATIONS.md` para o estado exato de cada ferramenta.
+de interface. As ferramentas restantes com "—" se dividem em dois grupos, por
+duas razões diferentes — distinção explicada também na página "Web × Desktop"
+dentro do próprio aplicativo web (acessível pela barra lateral): (1)
+**limitação permanente** — otimização avançada (Ghostscript), conversão
+Office (LibreOffice), assinatura digital ICP-Brasil (certificado PFX/P12) e
+redação/reparo avançados (qpdf) dependem de binários nativos ou de material
+sensível que nunca deve circular por código de terceiros num navegador; (2)
+**ainda não portada** — marcadores/bookmarks, comparação de documentos e
+inspeção de estrutura interna do PDF não têm, por enquanto, motor equivalente
+construído para o navegador, mas não há impedimento técnico definitivo,
+apenas trabalho ainda não feito. Ver `docs/LIMITATIONS.md` para o estado
+exato de cada ferramenta.

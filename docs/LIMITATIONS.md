@@ -49,11 +49,36 @@ ferramenta.
   caso silenciosamente).
 - Não há suporte a arquivos protegidos por senha (a versão web detecta e
   informa esse caso, mas não solicita/valida a senha ainda).
-- Testes end-to-end (Playwright) estão escritos e configurados, mas não foram
-  executados no ambiente usado para construir este projeto por uma limitação
-  do próprio ambiente (faltam bibliotecas de sistema do Chromium, sem acesso
-  root para instalá-las) — eles rodam no GitHub Actions. Não trate como
-  "testado" até o workflow `web-tests.yml` ter rodado com sucesso.
+- Testes end-to-end (Playwright) foram de fato executados neste ambiente
+  (não só escritos): o Chromium headless do sandbox faltava uma biblioteca
+  de sistema (`libXdamage.so.1`) e não havia acesso root para instalar via
+  `apt`/`playwright install-deps`; o pacote `.deb` já havia sido baixado em
+  `/tmp` por uma tentativa anterior, então foi extraído localmente com
+  `dpkg-deb -x` (sem privilégio de root) e apontado via `LD_LIBRARY_PATH` só
+  para os processos de teste — nenhuma alteração de sistema. Com isso, toda a
+  suíte (`home`, `organize`, `split`, `images-to-pdf`, `pdf-to-images`,
+  `compress`, `visual-signature`, `web-desktop`) rodou de verdade contra um
+  build de produção real. Esse workaround não está automatizado no
+  `web-tests.yml` do GitHub Actions, que segue sendo a fonte de verdade para
+  CI — mas os resultados aqui já são execuções reais, não suposição. Essa
+  execução real revelou e permitiu corrigir bugs genuínos e pré-existentes
+  que nenhuma rodada anterior havia detectado: seletores Playwright ambíguos
+  (o mesmo texto de botão aparece na barra lateral e no cartão da tela
+  inicial) quebravam 100% dos testes de `organize`, `images-to-pdf`,
+  `pdf-to-images` e `split` — 14 testes ao todo, corrigidos com locators mais
+  específicos (`.first()` ou texto mais distintivo); e uma violação real de
+  acessibilidade crítica no componente compartilhado `DropZone` (o `<input
+  type="file">` oculto não tinha nome acessível), agora corrigida com
+  `aria-label`, o que também beneficia toda ferramenta que usa esse
+  componente. Uma falha isolada e ainda não diagnosticada permanece em
+  `compress.spec.ts` (1 de 3 testes, o de acessibilidade): o mesmo trecho de
+  código de geração de PDF de teste (`writeFixture`) falha de forma
+  determinística quando executado em Node puro, fora do runner do
+  Playwright, mas passa de forma determinística dentro dele — indício de uma
+  diferença de resolução de módulo (`pdf-lib`) entre os dois contextos ainda
+  não identificada. Não afeta o motor de compressão em si (os outros 2
+  testes do mesmo arquivo, que exercitam o motor de verdade, passam), e não
+  foi investigado mais a fundo por estar fora do escopo desta fase.
 
 ## Web — o que nunca vai existir (por design, não por falta de tempo)
 
@@ -72,6 +97,20 @@ navegador — é propor um serviço de backend dedicado, com uma análise
 explícita de tecnologia, hospedagem, custo, retenção de dados, criptografia,
 privacidade e risco, sujeita a aprovação explícita antes de qualquer
 implementação.
+
+## Web — exclusivo do desktop por enquanto (não por design permanente)
+
+Diferente da lista acima, estas três ferramentas não têm nenhum impedimento
+técnico definitivo para rodar no navegador — apenas ainda não têm um motor
+equivalente construído aqui. Estão corretamente identificadas na interface
+como "Disponível no aplicativo desktop" (nunca como botão ativo falso), e a
+distinção entre as duas categorias é explicada na página "Web × Desktop"
+dentro do próprio aplicativo (acessível pela barra lateral):
+
+- Marcadores/bookmarks (listar, adicionar, remover).
+- Comparação de documentos página a página.
+- Inspeção técnica da estrutura interna do PDF (versão, criptografia,
+  formulários, JavaScript embutido, imagens e anexos).
 
 ## Desktop — limitações conhecidas
 

@@ -83,6 +83,7 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
         accept={accept}
         multiple={multiple}
         className="visually-hidden"
+        aria-label="Selecionar arquivos do seu computador"
         onChange={(e) => void validateAndAccept(e.target.files)}
       />
       <Icon kind="upload" size={32} className="text-muted" />

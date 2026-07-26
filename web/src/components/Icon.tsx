@@ -201,6 +201,27 @@ export function Icon({ kind, size = 20, className }: IconProps) {
           <rect x="5" y="3" width="14" height="18" rx="1.5" strokeDasharray="3 3" />
         </svg>
       );
+    case "bookmarks":
+      return (
+        <svg {...common}>
+          <path d="M7 3h10a1 1 0 0 1 1 1v16l-6-4-6 4V4a1 1 0 0 1 1-1Z" />
+        </svg>
+      );
+    case "compare":
+      return (
+        <svg {...common}>
+          <rect x="3" y="4" width="8" height="16" rx="1.5" />
+          <rect x="13" y="4" width="8" height="16" rx="1.5" />
+          <path d="M11 12h2" />
+        </svg>
+      );
+    case "inspect":
+      return (
+        <svg {...common}>
+          <circle cx="10" cy="10" r="6" />
+          <path d="M14.5 14.5 20 20" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>
