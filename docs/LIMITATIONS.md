@@ -56,29 +56,37 @@ ferramenta.
   `/tmp` por uma tentativa anterior, então foi extraído localmente com
   `dpkg-deb -x` (sem privilégio de root) e apontado via `LD_LIBRARY_PATH` só
   para os processos de teste — nenhuma alteração de sistema. Com isso, toda a
-  suíte (`home`, `organize`, `split`, `images-to-pdf`, `pdf-to-images`,
-  `compress`, `visual-signature`, `web-desktop`) rodou de verdade contra um
-  build de produção real. Esse workaround não está automatizado no
-  `web-tests.yml` do GitHub Actions, que segue sendo a fonte de verdade para
-  CI — mas os resultados aqui já são execuções reais, não suposição. Essa
-  execução real revelou e permitiu corrigir bugs genuínos e pré-existentes
-  que nenhuma rodada anterior havia detectado: seletores Playwright ambíguos
-  (o mesmo texto de botão aparece na barra lateral e no cartão da tela
-  inicial) quebravam 100% dos testes de `organize`, `images-to-pdf`,
-  `pdf-to-images` e `split` — 14 testes ao todo, corrigidos com locators mais
-  específicos (`.first()` ou texto mais distintivo); e uma violação real de
-  acessibilidade crítica no componente compartilhado `DropZone` (o `<input
-  type="file">` oculto não tinha nome acessível), agora corrigida com
-  `aria-label`, o que também beneficia toda ferramenta que usa esse
-  componente. Uma falha isolada e ainda não diagnosticada permanece em
-  `compress.spec.ts` (1 de 3 testes, o de acessibilidade): o mesmo trecho de
-  código de geração de PDF de teste (`writeFixture`) falha de forma
-  determinística quando executado em Node puro, fora do runner do
-  Playwright, mas passa de forma determinística dentro dele — indício de uma
-  diferença de resolução de módulo (`pdf-lib`) entre os dois contextos ainda
-  não identificada. Não afeta o motor de compressão em si (os outros 2
-  testes do mesmo arquivo, que exercitam o motor de verdade, passam), e não
-  foi investigado mais a fundo por estar fora do escopo desta fase.
+  suíte (16 arquivos de spec, 68 testes — cada ferramenta, a tela inicial, a
+  página Web × Desktop, layout responsivo/WCAG e PWA/caminho-base) rodou de
+  verdade contra um build de produção real. Esse workaround não está
+  automatizado no `web-tests.yml` do GitHub Actions, que segue sendo a fonte
+  de verdade para CI — mas os resultados aqui já são execuções reais, não
+  suposição.
+
+  Essa execução real revelou e permitiu corrigir bugs genuínos e
+  pré-existentes que nenhuma rodada anterior havia detectado: seletores
+  Playwright ambíguos (o mesmo texto de botão aparece na barra lateral e no
+  cartão da tela inicial) quebravam 100% dos testes de `organize`,
+  `images-to-pdf`, `pdf-to-images` e `split` — 14 testes ao todo, corrigidos
+  com locators mais específicos (`.first()` ou texto mais distintivo); uma
+  violação real de acessibilidade crítica no componente compartilhado
+  `DropZone` (o `<input type="file">` oculto não tinha nome acessível),
+  corrigida com `aria-label`; um `MediaBox` de 200×200pt nos PDFs sintéticos
+  de teste (`shared/test-fixtures/generate.mjs`) que causava truncamento
+  silencioso de texto no `pdfjs-dist` sempre que a posição estimada de um
+  glifo ultrapassava a borda da página — corrigido para tamanho A4; um bug
+  intermitente em `compress.spec.ts`, antes registrado aqui como "isolado e
+  não diagnosticado" — investigado a fundo e identificado: `Buffer.from`
+  (base64) às vezes devolvia uma view dentro do pool interno de 8 KB do
+  Node com `byteOffset != 0`, e o `JpegEmbedder` do pdf-lib lê
+  `imageData.buffer` ignorando esse offset, então herdar uma view
+  pool-alocada fazia o parser ler o offset errado e falhar de forma
+  intermitente — corrigido copiando para um `ArrayBuffer` próprio via
+  `slice()`, confirmado estável com `--repeat-each=3`; e um `require()`
+  usado dentro de um arquivo de teste ESM (`ocr.spec.ts`), que sempre
+  quebrava o único teste que reabria o resultado real do OCR — corrigido
+  usando `readFileSync` já importado no topo do arquivo. Ver `docs/WEB.md`
+  para o relato completo.
 
 ## Web — o que nunca vai existir (por design, não por falta de tempo)
 
