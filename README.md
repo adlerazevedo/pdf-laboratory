@@ -86,6 +86,12 @@ Nenhuma das duas versões envia seus documentos para um servidor. Detalhes em
 Política de reporte de vulnerabilidades em [`SECURITY.md`](SECURITY.md);
 detalhes técnicos em [`docs/SECURITY.md`](docs/SECURITY.md).
 
+## CI/CD, Dependabot e CodeQL
+
+[`docs/CI.md`](docs/CI.md) — workflows do GitHub Actions, política de
+triagem do Dependabot e o passo manual único necessário no CodeQL antes
+da primeira publicação.
+
 ## Arquitetura
 
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

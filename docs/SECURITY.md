@@ -38,7 +38,9 @@ ser deliberadamente malicioso.
 - **Sem segredos no frontend**: não existem chaves de API nem tokens
   embutidos no código — não há backend para autenticar.
 - **Dependências com versão fixada**, auditadas via `npm audit`, Dependabot
-  (`.github/dependabot.yml`) e CodeQL (`.github/workflows/codeql.yml`).
+  (`.github/dependabot.yml`) e CodeQL (`.github/workflows/codeql.yml`) — ver
+  `docs/CI.md` para a política de triagem e um passo manual de
+  configuração necessário no CodeQL.
 - **Worker de PDF isolado**: todo o processamento roda em um Web Worker
   (`src/workers/pdfWorker.ts`), limitando a superfície de um eventual bug de
   processamento em relação à thread principal da interface.

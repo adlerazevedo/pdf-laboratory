@@ -1,5 +1,17 @@
 name: codeql
 
+# IMPORTANTE (passo manual único, feito uma vez ao publicar o repositório):
+# GitHub oferece dois modos de code scanning que NÃO podem coexistir: o
+# "default setup" (ativado só pela UI, em Settings > Code security and
+# analysis > Code scanning) e o "advanced setup" (este workflow). Se o
+# default setup estiver ativo quando este workflow rodar, a análise falha
+# com "CodeQL analyses from advanced configurations cannot be processed
+# when the default setup is enabled". Antes do primeiro push para o
+# branch principal, confirme em Settings > Code security and analysis que
+# "Code scanning" está configurado como "Advanced" (ou desativado), nunca
+# "Default" — do contrário este workflow falhará de forma confusa mesmo
+# estando correto.
+
 on:
   push:
     branches: [main]
