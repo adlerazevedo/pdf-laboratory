@@ -60,6 +60,28 @@ export async function splitByRanges(
   return outputs;
 }
 
+/**
+ * Generaliza `splitByRanges` para grupos arbitrários de páginas (0-based),
+ * não necessariamente contíguos — cobre "cada página em um arquivo",
+ * "a cada N páginas", "dividir em N arquivos", "páginas pares/ímpares" e
+ * "intervalos personalizados" com a mesma função, um documento por grupo.
+ */
+export async function splitByPageGroups(
+  bytes: Uint8Array,
+  groups: number[][],
+  onProgress?: ProgressCallback,
+  cancelToken?: CancelToken,
+): Promise<Uint8Array[]> {
+  const outputs: Uint8Array[] = [];
+  for (let i = 0; i < groups.length; i++) {
+    checkCancelled(cancelToken);
+    const doc = await extractPages(bytes, groups[i]);
+    outputs.push(doc);
+    report(onProgress, i + 1, groups.length, `Gerando parte ${i + 1} de ${groups.length}`);
+  }
+  return outputs;
+}
+
 /** Junta múltiplos PDFs, na ordem informada, em um único documento. */
 export async function mergeDocuments(
   documents: Uint8Array[],

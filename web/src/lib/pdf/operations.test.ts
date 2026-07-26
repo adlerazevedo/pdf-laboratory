@@ -8,6 +8,7 @@ import {
   mergeDocuments,
   rebuildFromPageStates,
   setSimpleMetadata,
+  splitByPageGroups,
   splitByRanges,
 } from "./operations";
 import type { PageState } from "./types";
@@ -205,5 +206,36 @@ describe("imagesToPdf — opções de layout", () => {
     const result = await PDFDocument.load(out);
     const page = result.getPage(0);
     expect(page.getWidth()).toBeGreaterThan(page.getHeight());
+  });
+});
+
+describe("splitByPageGroups", () => {
+  it("gera um arquivo por grupo, na ordem dos grupos", async () => {
+    const bytes = await makeSyntheticPdf(6);
+    const outputs = await splitByPageGroups(bytes, [[0], [1], [2], [3], [4], [5]]);
+    expect(outputs).toHaveLength(6);
+    for (const out of outputs) {
+      const doc = await PDFDocument.load(out);
+      expect(doc.getPageCount()).toBe(1);
+    }
+  });
+
+  it("suporta grupos não contíguos (páginas pares/ímpares)", async () => {
+    const bytes = await makeSyntheticPdf(6, "pg");
+    const [odd, even] = await splitByPageGroups(bytes, [
+      [0, 2, 4],
+      [1, 3, 5],
+    ]);
+    const oddDoc = await PDFDocument.load(odd);
+    const evenDoc = await PDFDocument.load(even);
+    expect(oddDoc.getPageCount()).toBe(3);
+    expect(evenDoc.getPageCount()).toBe(3);
+  });
+
+  it("com um único grupo contendo todas as páginas, se comporta como extractPages", async () => {
+    const bytes = await makeSyntheticPdf(4);
+    const [out] = await splitByPageGroups(bytes, [[3, 1]]);
+    const doc = await PDFDocument.load(out);
+    expect(doc.getPageCount()).toBe(2);
   });
 });

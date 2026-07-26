@@ -7,7 +7,7 @@ nesta versão; nunca aparece como botão ativo falso).
 | Ferramenta | Desktop | Web | Notas |
 |---|---|---|---|
 | Unir PDFs | Completo | Completo | |
-| Dividir PDF | Completo | Completo | |
+| Dividir PDF | Completo | Completo | 6 modos: cada página, intervalos personalizados, a cada N páginas, dividir em N arquivos, pares/ímpares, extrair seleção; validação imediata, resumo visual das saídas, download em .zip (ou PDF único quando há apenas 1 saída) |
 | Extrair páginas | Completo | Completo | |
 | Marca d'água | Completo | Completo | |
 | Numeração de páginas | Completo | Completo | |

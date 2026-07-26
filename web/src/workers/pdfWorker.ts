@@ -9,6 +9,7 @@ import {
   mergeDocuments,
   rebuildFromPageStates,
   setSimpleMetadata,
+  splitByPageGroups,
   splitByRanges,
   type ImagesToPdfOptions,
   type PageNumberOptions,
@@ -19,6 +20,7 @@ import type { PageState, SimpleMetadata } from "../lib/pdf/types";
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
   | { id: string; kind: "splitByRanges"; bytes: Uint8Array; ranges: Array<{ start: number; end: number }> }
+  | { id: string; kind: "splitByPageGroups"; bytes: Uint8Array; groups: number[][] }
   | { id: string; kind: "mergeDocuments"; documents: Uint8Array[] }
   | { id: string; kind: "rebuildFromPageStates"; bytes: Uint8Array; pages: PageState[] }
   | { id: string; kind: "addWatermark"; bytes: Uint8Array; options: WatermarkOptions }
@@ -71,6 +73,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       }
       case "splitByRanges": {
         const documents = await splitByRanges(msg.bytes, msg.ranges, onProgress, token);
+        response = { id: msg.id, kind: "resultMany", documents };
+        break;
+      }
+      case "splitByPageGroups": {
+        const documents = await splitByPageGroups(msg.bytes, msg.groups, onProgress, token);
         response = { id: msg.id, kind: "resultMany", documents };
         break;
       }
