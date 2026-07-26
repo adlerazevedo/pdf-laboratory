@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="PDF Laboratory — suíte local e privada para manipulação de PDFs. Processamento local no navegador; seus documentos não são enviados." />
+    <meta name="theme-color" content="#147D82" />
+    <!--
+      Content-Security-Policy restritiva: sem eval, sem scripts/estilos inline
+      arbitrários (exceto o necessário para estilos injetados pelo próprio
+      Vite em dev), sem conexões de rede além da própria origem (não há
+      backend — nenhum documento pode ser enviado a lugar nenhum mesmo que
+      um bug tentasse). Ajustada para funcionar com o build estático do
+      GitHub Pages.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
+    <title>PDF Laboratory</title>
+    <script type="module" src="/src/main.tsx"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

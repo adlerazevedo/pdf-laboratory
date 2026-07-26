@@ -1,0 +1,45 @@
+/* Paleta espelhada da versão desktop (PDF_Laboratory.py, UiColors) para
+   manter identidade visual consistente entre as duas versões. */
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F5;
+  --text: #182125;
+  --text-2: #5F6B72;
+  --border: #DCE3E8;
+  --accent: #147D82;
+  --accent-hover: #10666A;
+  --success: #27845A;
+  --warning: #B7791F;
+  --danger: #B83A3A;
+  --info: #356FA8;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --control-height: 40px;
+  --font-family: "Segoe UI Variable", "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
+  --shadow-card: 0 1px 2px rgba(24, 33, 37, 0.06), 0 2px 8px rgba(24, 33, 37, 0.05);
+}
+
+[data-theme="dark"] {
+  --bg: #111619;
+  --surface: #192024;
+  --surface-2: #222B30;
+  --text: #EDF3F5;
+  --text-2: #AAB6BC;
+  --border: #303B41;
+  --accent: #35A4A7;
+  --accent-hover: #47B8BB;
+  --success: #51AE7C;
+  --warning: #D7A84B;
+  --danger: #E16969;
+  --info: #6EA6D8;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
+}

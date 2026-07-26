@@ -1,0 +1,57 @@
+name: desktop-tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-tests.yml"
+  pull_request:
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências de sistema para Qt offscreen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0 libxkbcommon0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0
+
+      - name: Instalar dependências Python
+        working-directory: desktop
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6 pypdf pypdfium2 Pillow pydantic platformdirs psutil
+
+      - name: Verificar sintaxe (py_compile)
+        working-directory: desktop
+        run: python -m py_compile PDF_Laboratory.py
+
+      - name: Executar --diagnostico
+        working-directory: desktop
+        run: python PDF_Laboratory.py --diagnostico
+
+      - name: Executar --self-test
+        working-directory: desktop
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python PDF_Laboratory.py --self-test
+
+      - name: Verificar ausência de segredos/caminhos pessoais óbvios
+        working-directory: desktop
+        run: |
+          ! grep -nE "(BEGIN (RSA|EC|OPENSSH) PRIVATE KEY|api[_-]?key\s*=\s*['\"])" PDF_Laboratory.py

@@ -1,0 +1,49 @@
+# --- Segredos e dados sensíveis (nunca commitar) ---
+.env
+.env.*
+*.pfx
+*.p12
+*.key
+*.pem
+secrets/
+credentials/
+
+# --- Python / desktop ---
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+dist/
+*.spec.bak
+
+# --- Node / web ---
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/.vite/
+web/coverage/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+node_modules/
+
+# --- Fixtures geradas (regeneráveis via shared/test-fixtures/generate.mjs) ---
+shared/test-fixtures/generated/
+
+# --- Editor / SO ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# --- Nunca commitar documentos reais de usuário ---
+*.personal.pdf
+/uploads/
+/private/
