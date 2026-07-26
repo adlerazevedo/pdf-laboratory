@@ -439,3 +439,119 @@ export async function compressBasic(
     compressedSize: compressedBytes.length,
   };
 }
+
+export type SignaturePosition =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "middle-center"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
+export interface VisualSignatureTextContent {
+  kind: "text";
+  text: string;
+  colorHex?: string;
+}
+
+export interface VisualSignatureImageContent {
+  kind: "image";
+  bytes: Uint8Array;
+  mimeType: "image/png" | "image/jpeg";
+}
+
+export type VisualSignatureContent = VisualSignatureTextContent | VisualSignatureImageContent;
+
+export interface VisualSignatureOptions {
+  content: VisualSignatureContent;
+  position: SignaturePosition;
+  /** Largura do carimbo, como percentual da largura da página (10–80). */
+  scalePercent?: number;
+  /** Opacidade do carimbo, 0–1. */
+  opacity?: number;
+  marginPt?: number;
+  /** Páginas (0-based) a carimbar. Omitido = todas as páginas. */
+  pageIndices?: number[];
+}
+
+function computeStampOrigin(
+  position: SignaturePosition,
+  pageWidth: number,
+  pageHeight: number,
+  stampWidth: number,
+  stampHeight: number,
+  margin: number,
+): { x: number; y: number } {
+  let x: number;
+  if (position.endsWith("left")) x = margin;
+  else if (position.endsWith("right")) x = pageWidth - stampWidth - margin;
+  else x = (pageWidth - stampWidth) / 2;
+
+  let y: number;
+  if (position.startsWith("top")) y = pageHeight - stampHeight - margin;
+  else if (position.startsWith("bottom")) y = margin;
+  else y = (pageHeight - stampHeight) / 2;
+
+  return { x, y };
+}
+
+/**
+ * Aplica um carimbo visual (texto ou imagem) em uma ou mais páginas. É
+ * SOMENTE visual — sem validade jurídica ou criptográfica, e sem qualquer
+ * interação com certificados. Nunca deve receber/solicitar arquivos
+ * PFX/P12; para assinatura digital real (ICP-Brasil), use o aplicativo
+ * desktop.
+ */
+export async function addVisualSignature(
+  bytes: Uint8Array,
+  options: VisualSignatureOptions,
+  onProgress?: ProgressCallback,
+  cancelToken?: CancelToken,
+): Promise<Uint8Array> {
+  const doc = await loadForEditing(bytes);
+  const pages = doc.getPages();
+  const targetIndices = options.pageIndices ?? pages.map((_, i) => i);
+  const opacity = options.opacity ?? 1;
+  const marginPt = options.marginPt ?? 24;
+  const scalePercent = Math.min(80, Math.max(5, options.scalePercent ?? 25));
+
+  const embeddedImage =
+    options.content.kind === "image"
+      ? options.content.mimeType === "image/png"
+        ? await doc.embedPng(options.content.bytes)
+        : await doc.embedJpg(options.content.bytes)
+      : null;
+  const font = options.content.kind === "text" ? await doc.embedFont(StandardFonts.HelveticaBoldOblique) : null;
+
+  for (let i = 0; i < targetIndices.length; i++) {
+    checkCancelled(cancelToken);
+    const pageIndex = targetIndices[i];
+    const page = pages[pageIndex];
+    if (!page) continue;
+    const { width: pageWidth, height: pageHeight } = page.getSize();
+    const desiredWidth = (pageWidth * scalePercent) / 100;
+
+    if (options.content.kind === "image" && embeddedImage) {
+      const stampWidth = desiredWidth;
+      const stampHeight = stampWidth * (embeddedImage.height / embeddedImage.width);
+      const { x, y } = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
+      page.drawImage(embeddedImage, { x, y, width: stampWidth, height: stampHeight, opacity });
+    } else if (font && options.content.kind === "text") {
+      const text = options.content.text;
+      const baseSize = 24;
+      const baseWidth = Math.max(1, font.widthOfTextAtSize(text, baseSize));
+      const fontSize = baseSize * (desiredWidth / baseWidth);
+      const stampWidth = font.widthOfTextAtSize(text, fontSize);
+      const stampHeight = font.heightAtSize(fontSize);
+      const { r, g, b } = hexToRgb01(options.content.colorHex ?? "#1D3557");
+      const { x, y } = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
+      page.drawText(text, { x, y, size: fontSize, font, color: rgb(r, g, b), opacity });
+    }
+    report(onProgress, i + 1, targetIndices.length, "Aplicando assinatura visual");
+  }
+
+  return doc.save();
+}

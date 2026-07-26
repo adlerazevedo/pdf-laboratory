@@ -17,7 +17,7 @@ nesta versão; nunca aparece como botão ativo falso).
 | PDF → imagens | Completo | Completo | Seleção de páginas, PNG/JPEG, resolução (DPI), qualidade JPEG, download individual ou em .zip |
 | Compressão/otimização básica | — | Parcial | Web: recomprime apenas imagens JPEG (DCTDecode) já embutidas no PDF, em 3 níveis (leve/média/forte); não toca fontes, texto ou vetores; não garante redução (documentos sem JPEG, ou já otimizados, podem não encolher); imagens com transparência (SMask) ou espaço de cor não-RGB/escala de cinza são deixadas intactas por segurança |
 | OCR (texto pesquisável) | Completo (OCRmyPDF + Tesseract) | — | Web: planejado via Tesseract.js em Web Worker; ainda não implementado |
-| Assinatura visual (carimbo) | Completo | — | Web: planejada como nível "limitada"; ainda não implementada |
+| Assinatura visual (carimbo) | Completo | Parcial | Web: texto, desenho à mão (canvas) ou imagem PNG/JPEG; posição (9 opções), tamanho e opacidade ajustáveis; seleção de páginas (todas/primeira/intervalo); aviso explícito de que não é assinatura digital; nunca solicita PFX/P12 |
 | Otimização avançada (Ghostscript) | Completo | — | Depende de binário instalado localmente; exclusivo do desktop |
 | Conversão Word/Excel/PowerPoint ↔ PDF | Completo (via LibreOffice) | — | Depende de binário instalado localmente; exclusivo do desktop |
 | Assinatura digital (ICP-Brasil, PFX/P12) | Completo (via pyHanko) | — | Certificados PFX/P12 nunca devem ser carregados em um navegador; exclusivo do desktop |
@@ -35,6 +35,6 @@ nesta tabela, ela tem uma tela real conectada ao motor, sem limitações
 relevantes — não apenas a função existindo internamente. "Parcial" significa
 que a tela e o motor existem e são reais, mas com limitações genuínas
 descritas na coluna de notas (não é uma forma educada de dizer "incompleto").
-Ferramentas ainda marcadas como "—" na coluna Web (OCR, assinatura visual)
-têm apenas planejamento ou motor parcial nesta fase; ver
+Ferramentas ainda marcadas como "—" na coluna Web (OCR) têm apenas
+planejamento ou motor parcial nesta fase; ver
 `docs/LIMITATIONS.md` para o estado exato de cada uma.

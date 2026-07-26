@@ -6,9 +6,14 @@ ferramenta.
 
 ## Web — o que ainda não existe
 
-- **OCR** e **assinatura visual (carimbo)** ainda não foram implementados
-  nesta versão web (planejados como ferramentas de nível "limitado" — ver
-  `web/src/data/tools.ts`).
+- **OCR** ainda não foi implementado nesta versão web (planejado como
+  ferramenta de nível "limitado" — ver `web/src/data/tools.ts`).
+- **Assinatura visual (carimbo)** foi implementada e testada (unitário +
+  end-to-end com Playwright, incluindo o modo de desenho à mão via canvas,
+  ver `web/tests-e2e/visual-signature.spec.ts`). É estritamente visual: sem
+  validade jurídica ou criptográfica, e a interface nunca solicita nem
+  processa certificados PFX/P12 — o tipo `VisualSignatureOptions` nem
+  possui esse campo.
 - **Compressão básica** foi implementada e testada (unitário + end-to-end
   com Playwright, ver `web/tests-e2e/compress.spec.ts`), mas com limitações
   reais e deliberadas: só recomprime imagens já embutidas com filtro

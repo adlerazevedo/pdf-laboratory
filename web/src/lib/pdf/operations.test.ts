@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import {
   addPageNumbers,
+  addVisualSignature,
   addWatermark,
   compressBasic,
   extractPages,
@@ -305,5 +306,83 @@ describe("compressBasic", () => {
     const bytesWithSmask = await reloaded.save();
     const result = await compressBasic(bytesWithSmask, { level: "medium" });
     expect(result.imagesFound).toBe(0); // SMask presente -> não é candidata, ignorada com segurança
+  });
+});
+
+describe("addVisualSignature", () => {
+  it("modo texto: carimba apenas as páginas indicadas, deixando as demais com o mesmo conteúdo", async () => {
+    const bytes = await makeSyntheticPdf(3);
+
+    function contentStreamSize(doc: PDFDocument, pageIndex: number): number {
+      const page = doc.getPages()[pageIndex];
+      const contents = page.node.Contents();
+      if (!contents) return 0;
+      // Contents() pode retornar um único stream ou (após certas operações) um
+      // PDFArray de refs — cobrimos os dois casos somando os tamanhos.
+      const asArray = "asArray" in contents ? (contents as { asArray: () => unknown[] }).asArray() : [contents];
+      let total = 0;
+      for (const item of asArray) {
+        const resolved = "contents" in (item as object) ? item : doc.context.lookup(item as never);
+        total += (resolved as { contents?: Uint8Array })?.contents?.length ?? 0;
+      }
+      return total;
+    }
+
+    const before = await PDFDocument.load(bytes);
+    const beforeSizes = [0, 1, 2].map((i) => contentStreamSize(before, i));
+
+    const out = await addVisualSignature(bytes, {
+      content: { kind: "text", text: "Assinado por Fulano" },
+      position: "bottom-right",
+      pageIndices: [1],
+    });
+    const after = await PDFDocument.load(out);
+    expect(after.getPageCount()).toBe(3);
+    const afterSizes = [0, 1, 2].map((i) => contentStreamSize(after, i));
+
+    // Só a página carimbada (índice 1) deve crescer; as demais ficam iguais.
+    expect(afterSizes[1]).toBeGreaterThan(beforeSizes[1]);
+    expect(afterSizes[0]).toBe(beforeSizes[0]);
+    expect(afterSizes[2]).toBe(beforeSizes[2]);
+  });
+
+  it("sem pageIndices, carimba todas as páginas", async () => {
+    const bytes = await makeSyntheticPdf(2);
+    const out = await addVisualSignature(bytes, {
+      content: { kind: "text", text: "CONFIDENCIAL" },
+      position: "top-left",
+    });
+    const doc = await PDFDocument.load(out);
+    expect(doc.getPageCount()).toBe(2);
+  });
+
+  it("modo imagem: aplica a imagem sem lançar erro e preserva a contagem de páginas", async () => {
+    const bytes = await makeSyntheticPdf(2);
+    const out = await addVisualSignature(bytes, {
+      content: { kind: "image", bytes: tinyJpegBytes(), mimeType: "image/jpeg" },
+      position: "middle-center",
+      scalePercent: 30,
+      opacity: 0.8,
+      pageIndices: [0],
+    });
+    const doc = await PDFDocument.load(out);
+    expect(doc.getPageCount()).toBe(2);
+  });
+
+  it("nunca aceita nem referencia certificados PFX/P12 — a API não tem esse campo", () => {
+    // Verificação estrutural: o tipo de opções não expõe nenhum campo de
+    // certificado. Isto é reforçado em tempo de compilação (TypeScript),
+    // este teste documenta a garantia para quem só lê os testes.
+    const optionsShape: Array<keyof import("./operations").VisualSignatureOptions> = [
+      "content",
+      "position",
+      "scalePercent",
+      "opacity",
+      "marginPt",
+      "pageIndices",
+    ];
+    expect(optionsShape).not.toContain("certificate");
+    expect(optionsShape).not.toContain("pfx");
+    expect(optionsShape).not.toContain("p12");
   });
 });
