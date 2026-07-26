@@ -10,6 +10,7 @@ import {
   rebuildFromPageStates,
   setSimpleMetadata,
   splitByRanges,
+  type ImagesToPdfOptions,
   type PageNumberOptions,
   type WatermarkOptions,
 } from "../lib/pdf/operations";
@@ -23,7 +24,12 @@ export type PdfWorkerRequest =
   | { id: string; kind: "addWatermark"; bytes: Uint8Array; options: WatermarkOptions }
   | { id: string; kind: "addPageNumbers"; bytes: Uint8Array; options: PageNumberOptions }
   | { id: string; kind: "setSimpleMetadata"; bytes: Uint8Array; meta: SimpleMetadata }
-  | { id: string; kind: "imagesToPdf"; images: Array<{ bytes: Uint8Array; mimeType: "image/jpeg" | "image/png" }> }
+  | {
+      id: string;
+      kind: "imagesToPdf";
+      images: Array<{ bytes: Uint8Array; mimeType: "image/jpeg" | "image/png" }>;
+      options?: ImagesToPdfOptions;
+    }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -94,7 +100,7 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
         break;
       }
       case "imagesToPdf": {
-        const bytes = await imagesToPdf(msg.images, onProgress, token);
+        const bytes = await imagesToPdf(msg.images, onProgress, token, msg.options);
         response = { id: msg.id, kind: "result", bytes };
         break;
       }

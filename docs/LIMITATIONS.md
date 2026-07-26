@@ -6,12 +6,17 @@ ferramenta.
 
 ## Web — o que ainda não existe
 
-- **Organizar páginas** (reordenar/girar/duplicar/excluir/inserir em branco),
-  **imagens → PDF** e **PDF → imagens** têm o motor implementado e testado,
-  mas ainda não têm uma tela dedicada na interface.
 - **OCR**, **assinatura visual (carimbo)** e **compressão básica** ainda não
   foram implementados nesta versão web (planejados como ferramentas de nível
   "limitado" — ver `web/src/data/tools.ts`).
+- **Organizar páginas**, **imagens → PDF** e **PDF → imagens** foram
+  implementados e testados (unitário + end-to-end com Playwright, ver
+  `web/tests-e2e/`) nesta versão. Limitação conhecida de "Organizar páginas":
+  se o usuário excluir todas as páginas, a interface bloqueia o botão
+  "Salvar" com uma mensagem explícita — não é possível gerar um PDF de 0
+  páginas (descoberta real ao testar: o pdf-lib normaliza um documento vazio
+  para 1 página em branco ao reabri-lo, então a interface nunca confia nesse
+  caso silenciosamente).
 - Não há suporte a arquivos protegidos por senha (a versão web detecta e
   informa esse caso, mas não solicita/valida a senha ainda).
 - Testes end-to-end (Playwright) estão escritos e configurados, mas não foram

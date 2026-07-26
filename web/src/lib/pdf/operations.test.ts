@@ -6,9 +6,11 @@ import {
   extractPages,
   imagesToPdf,
   mergeDocuments,
+  rebuildFromPageStates,
   setSimpleMetadata,
   splitByRanges,
 } from "./operations";
+import type { PageState } from "./types";
 
 /** Cria um PDF sintético em memória com N páginas numeradas — nunca dados reais. */
 async function makeSyntheticPdf(pageCount: number, label = "doc"): Promise<Uint8Array> {
@@ -95,5 +97,113 @@ describe("imagesToPdf", () => {
     ]);
     const result = await PDFDocument.load(out);
     expect(result.getPageCount()).toBe(2);
+  });
+});
+
+describe("rebuildFromPageStates", () => {
+  it("reordena as páginas conforme a lista de estados", async () => {
+    const bytes = await makeSyntheticPdf(3, "pg");
+    const states: PageState[] = [
+      { sourceIndex: 2, rotation: 0, selected: false },
+      { sourceIndex: 0, rotation: 0, selected: false },
+      { sourceIndex: 1, rotation: 0, selected: false },
+    ];
+    const out = await rebuildFromPageStates(bytes, states);
+    const result = await PDFDocument.load(out);
+    expect(result.getPageCount()).toBe(3);
+  });
+
+  it("duplica uma página quando o mesmo sourceIndex aparece mais de uma vez", async () => {
+    const bytes = await makeSyntheticPdf(2, "pg");
+    const states: PageState[] = [
+      { sourceIndex: 0, rotation: 0, selected: false },
+      { sourceIndex: 0, rotation: 0, selected: false },
+      { sourceIndex: 1, rotation: 0, selected: false },
+    ];
+    const out = await rebuildFromPageStates(bytes, states);
+    const result = await PDFDocument.load(out);
+    expect(result.getPageCount()).toBe(3);
+  });
+
+  it("remove páginas ausentes da lista de estados (exclusão)", async () => {
+    const bytes = await makeSyntheticPdf(4, "pg");
+    const states: PageState[] = [
+      { sourceIndex: 0, rotation: 0, selected: false },
+      { sourceIndex: 2, rotation: 0, selected: false },
+    ];
+    const out = await rebuildFromPageStates(bytes, states);
+    const result = await PDFDocument.load(out);
+    expect(result.getPageCount()).toBe(2);
+  });
+
+  it("insere páginas em branco no tamanho da última página real", async () => {
+    const bytes = await makeSyntheticPdf(1, "pg");
+    const states: PageState[] = [
+      { sourceIndex: 0, rotation: 0, selected: false },
+      { sourceIndex: -1, rotation: 0, selected: false, isInsertedBlank: true },
+    ];
+    const out = await rebuildFromPageStates(bytes, states);
+    const result = await PDFDocument.load(out);
+    expect(result.getPageCount()).toBe(2);
+    const [original, blank] = result.getPages();
+    expect(blank.getWidth()).toBe(original.getWidth());
+    expect(blank.getHeight()).toBe(original.getHeight());
+  });
+
+  it("aplica rotação às páginas indicadas", async () => {
+    const bytes = await makeSyntheticPdf(1, "pg");
+    const states: PageState[] = [{ sourceIndex: 0, rotation: 90, selected: false }];
+    const out = await rebuildFromPageStates(bytes, states);
+    const result = await PDFDocument.load(out);
+    expect(result.getPage(0).getRotation().angle).toBe(90);
+  });
+
+  it("com lista de estados vazia, o pdf-lib normaliza o resultado para 1 página em branco ao reabrir", async () => {
+    // Descoberta real ao testar (não suposição): PDFDocument.create()+save() com
+    // 0 páginas produz bytes válidos, mas PDFDocument.load() desses mesmos bytes
+    // devolve 1 página — o parser do pdf-lib normaliza documentos vazios ao
+    // reabri-los, provavelmente por compatibilidade com leitores de PDF que não
+    // aceitam 0 páginas. Por isso a interface (OrganizeTool) BLOQUEIA o usuário
+    // de salvar quando todas as páginas foram excluídas, em vez de confiar que
+    // esta função produziria um arquivo de 0 páginas de verdade.
+    const bytes = await makeSyntheticPdf(2, "pg");
+    const out = await rebuildFromPageStates(bytes, []);
+    const result = await PDFDocument.load(out);
+    expect(result.getPageCount()).toBe(1);
+  });
+});
+
+describe("imagesToPdf — opções de layout", () => {
+  const tinyPng = Uint8Array.from(
+    atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="),
+    (c) => c.charCodeAt(0),
+  );
+
+  it("com pageSize 'auto' (padrão), a página tem o tamanho exato da imagem", async () => {
+    const out = await imagesToPdf([{ bytes: tinyPng, mimeType: "image/png" }]);
+    const result = await PDFDocument.load(out);
+    expect(result.getPage(0).getWidth()).toBe(1);
+    expect(result.getPage(0).getHeight()).toBe(1);
+  });
+
+  it("com pageSize 'a4', a página usa as dimensões A4 independentemente do tamanho da imagem", async () => {
+    const out = await imagesToPdf([{ bytes: tinyPng, mimeType: "image/png" }], undefined, undefined, {
+      pageSize: "a4",
+      orientation: "portrait",
+    });
+    const result = await PDFDocument.load(out);
+    const page = result.getPage(0);
+    expect(Math.round(page.getWidth())).toBe(595);
+    expect(Math.round(page.getHeight())).toBe(842);
+  });
+
+  it("orientation 'landscape' inverte largura e altura da página", async () => {
+    const out = await imagesToPdf([{ bytes: tinyPng, mimeType: "image/png" }], undefined, undefined, {
+      pageSize: "a4",
+      orientation: "landscape",
+    });
+    const result = await PDFDocument.load(out);
+    const page = result.getPage(0);
+    expect(page.getWidth()).toBeGreaterThan(page.getHeight());
   });
 });

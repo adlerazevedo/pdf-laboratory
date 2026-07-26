@@ -12,9 +12,9 @@ nesta versão; nunca aparece como botão ativo falso).
 | Marca d'água | Completo | Completo | |
 | Numeração de páginas | Completo | Completo | |
 | Metadados simples | Completo | Completo | |
-| Organizar páginas (reordenar/girar/duplicar/excluir/inserir em branco) | Completo | — | Motor já implementado em `web/src/lib/pdf/operations.ts`; falta a interface de arrastar-e-soltar com miniaturas |
-| Imagens → PDF | Completo | — | Motor implementado (`imagesToPdf`); falta interface |
-| PDF → imagens | Completo | — | Motor implementado (`thumbnails.ts`); falta interface e empacotamento em .zip |
+| Organizar páginas (reordenar/girar/duplicar/excluir/inserir em branco) | Completo | Completo | Miniaturas, arrastar-e-soltar, seleção múltipla, desfazer/refazer; nunca modifica o arquivo original |
+| Imagens → PDF | Completo | Completo | Várias imagens, reordenação, tamanho de página, margem e ajuste conter/preencher |
+| PDF → imagens | Completo | Completo | Seleção de páginas, PNG/JPEG, resolução (DPI), qualidade JPEG, download individual ou em .zip |
 | Compressão/otimização básica | — | — | Web: planejada como nível "limitada"; ainda não implementada |
 | OCR (texto pesquisável) | Completo (OCRmyPDF + Tesseract) | — | Web: planejado via Tesseract.js em Web Worker; ainda não implementado |
 | Assinatura visual (carimbo) | Completo | — | Web: planejada como nível "limitada"; ainda não implementada |
@@ -29,10 +29,9 @@ nesta versão; nunca aparece como botão ativo falso).
 
 ## Sobre a coluna "Web"
 
-A versão web é construída em cima de um motor de PDF (`web/src/lib/pdf/`) que
-já implementa mais operações do que a interface atualmente expõe — algumas
-ferramentas listadas como "—" já têm a lógica pronta e testada
-(`operations.test.ts`), mas ainda não têm uma tela dedicada. Isso é
-declarado explicitamente para não superestimar o estado do projeto: uma
-função existir no motor não significa que a ferramenta esteja disponível
-para o usuário final.
+A versão web é construída em cima de um motor de PDF (`web/src/lib/pdf/`)
+independente da interface. Sempre que uma ferramenta aparece como "Completo"
+nesta tabela, ela tem uma tela real conectada ao motor — não apenas a função
+existindo internamente. Ferramentas ainda marcadas como "—" (compressão
+básica, OCR, assinatura visual) têm apenas planejamento ou motor parcial;
+ver `docs/LIMITATIONS.md` para o estado exato de cada uma.

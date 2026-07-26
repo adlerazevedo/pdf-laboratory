@@ -219,19 +219,72 @@ export async function setSimpleMetadata(bytes: Uint8Array, meta: SimpleMetadata)
   return doc.save();
 }
 
+export type ImagesToPdfPageSize = "auto" | "a4" | "letter";
+export type ImagesToPdfOrientation = "auto" | "portrait" | "landscape";
+export type ImagesToPdfFit = "contain" | "fill";
+
+export interface ImagesToPdfOptions {
+  /** "auto" usa o tamanho intrínseco de cada imagem como tamanho de página (comportamento original). */
+  pageSize?: ImagesToPdfPageSize;
+  /** "auto" preserva a orientação natural da imagem; "portrait"/"landscape" forçam a orientação da página. */
+  orientation?: ImagesToPdfOrientation;
+  /** Margem em pontos (1/72") aplicada nos quatro lados. Ignorada quando pageSize é "auto". */
+  marginPt?: number;
+  /**
+   * "contain": a imagem inteira cabe dentro da área útil, preservando proporção (pode sobrar espaço).
+   * "fill": a imagem preenche toda a área útil, esticando se necessário (não corta, mas pode distorcer).
+   */
+  fit?: ImagesToPdfFit;
+}
+
+const PAGE_SIZES_PT: Record<Exclude<ImagesToPdfPageSize, "auto">, [number, number]> = {
+  a4: [595.28, 841.89],
+  letter: [612, 792],
+};
+
 /** Constrói um novo PDF a partir de uma lista de imagens (JPEG/PNG), uma por página. */
 export async function imagesToPdf(
   images: Array<{ bytes: Uint8Array; mimeType: "image/jpeg" | "image/png" }>,
   onProgress?: ProgressCallback,
   cancelToken?: CancelToken,
+  options: ImagesToPdfOptions = {},
 ): Promise<Uint8Array> {
+  const { pageSize = "auto", orientation = "auto", marginPt = 0, fit = "contain" } = options;
   const doc = await PDFDocument.create();
   for (let i = 0; i < images.length; i++) {
     checkCancelled(cancelToken);
     const { bytes: imgBytes, mimeType } = images[i];
     const embedded = mimeType === "image/png" ? await doc.embedPng(imgBytes) : await doc.embedJpg(imgBytes);
-    const page = doc.addPage([embedded.width, embedded.height]);
-    page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+
+    if (pageSize === "auto") {
+      // Comportamento original: a página tem exatamente o tamanho da imagem, sem margem.
+      const page = doc.addPage([embedded.width, embedded.height]);
+      page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+    } else {
+      let [pageWidth, pageHeight] = PAGE_SIZES_PT[pageSize];
+      const imageIsLandscape = embedded.width >= embedded.height;
+      const wantLandscape = orientation === "landscape" || (orientation === "auto" && imageIsLandscape);
+      if (wantLandscape && pageWidth < pageHeight) [pageWidth, pageHeight] = [pageHeight, pageWidth];
+      if (!wantLandscape && pageWidth > pageHeight) [pageWidth, pageHeight] = [pageHeight, pageWidth];
+
+      const page = doc.addPage([pageWidth, pageHeight]);
+      const areaWidth = Math.max(1, pageWidth - marginPt * 2);
+      const areaHeight = Math.max(1, pageHeight - marginPt * 2);
+
+      let drawWidth: number;
+      let drawHeight: number;
+      if (fit === "fill") {
+        drawWidth = areaWidth;
+        drawHeight = areaHeight;
+      } else {
+        const scale = Math.min(areaWidth / embedded.width, areaHeight / embedded.height);
+        drawWidth = embedded.width * scale;
+        drawHeight = embedded.height * scale;
+      }
+      const x = marginPt + (areaWidth - drawWidth) / 2;
+      const y = marginPt + (areaHeight - drawHeight) / 2;
+      page.drawImage(embedded, { x, y, width: drawWidth, height: drawHeight });
+    }
     report(onProgress, i + 1, images.length, "Adicionando imagens");
   }
   return doc.save();

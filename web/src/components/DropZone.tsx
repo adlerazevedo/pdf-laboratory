@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Icon } from "./Icon";
-import { validatePdfFile } from "../lib/pdf/validation";
+import { validatePdfFile, type ValidationResult } from "../lib/pdf/validation";
 import { markSessionActive } from "../lib/sessionActivity";
 
 type DropState = "empty" | "dragging" | "accepted" | "rejected";
@@ -10,9 +10,16 @@ interface DropZoneProps {
   multiple?: boolean;
   accept?: string;
   hint?: string;
+  /**
+   * Validador customizado (ex.: validateImageFile). Quando ausente e
+   * accept === ".pdf", usa a validação de assinatura mágica de PDF.
+   * Quando ausente e accept for outra coisa, nenhuma validação é aplicada
+   * além do próprio atributo "accept" do input de arquivo.
+   */
+  validate?: (file: File) => ValidationResult | Promise<ValidationResult>;
 }
 
-export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", hint }: DropZoneProps) {
+export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", hint, validate }: DropZoneProps) {
   const [state, setState] = useState<DropState>("empty");
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,9 +28,10 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
     async (fileList: FileList | null) => {
       if (!fileList || fileList.length === 0) return;
       const files = Array.from(fileList);
-      if (accept === ".pdf") {
+      const validator = validate ?? (accept === ".pdf" ? validatePdfFile : undefined);
+      if (validator) {
         for (const file of files) {
-          const result = await validatePdfFile(file);
+          const result = await validator(file);
           if (!result.valid) {
             setState("rejected");
             setMessage(result.reason ?? "Arquivo inválido.");
@@ -36,7 +44,7 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
       markSessionActive();
       onFilesAccepted(files);
     },
-    [accept, onFilesAccepted],
+    [accept, onFilesAccepted, validate],
   );
 
   return (
