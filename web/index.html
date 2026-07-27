@@ -10,12 +10,26 @@
     <!--
       Content-Security-Policy restritiva: sem eval, sem scripts/estilos inline
       arbitrários (exceto o necessário para estilos injetados pelo próprio
-      Vite em dev), sem conexões de rede além da própria origem (não há
-      backend — nenhum documento pode ser enviado a lugar nenhum mesmo que
-      um bug tentasse). Ajustada para funcionar com o build estático do
-      GitHub Pages.
+      Vite em dev), e por padrão nenhuma conexão de rede além da própria
+      origem (não há backend — nenhum PDF do usuário pode ser enviado a
+      lugar nenhum mesmo que um bug tentasse). Ajustada para funcionar com o
+      build estático do GitHub Pages.
+
+      Exceção única e deliberada: cdn.jsdelivr.net é liberado em
+      script-src/connect-src/worker-src exclusivamente para a ferramenta de
+      OCR (Tesseract.js), que precisa baixar seu motor WASM e os modelos de
+      idioma (PT/EN) de lá na primeira execução de cada idioma. Isso NUNCA
+      envia o PDF do usuário para essa CDN — só busca o motor/modelo do
+      Tesseract.js, como se fosse uma dependência de código.
+      'wasm-unsafe-eval' também foi adicionado a script-src: é exigido pelo
+      navegador para compilar/instanciar WebAssembly, mas — diferente de
+      'unsafe-eval' — NÃO habilita eval()/Function() de strings JavaScript
+      arbitrárias; é uma permissão propositalmente mais estreita. Ver
+      docs/SECURITY.md e docs/PRIVACY.md para a justificativa completa
+      dessa exceção e seus riscos (dependência de terceiro em tempo de
+      execução, ver também docs/LIMITATIONS.md).
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';" />
     <title>PDF Laboratory</title>
     <script type="module" src="/src/main.tsx"></script>
   </head>

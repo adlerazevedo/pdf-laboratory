@@ -10,13 +10,16 @@ test("carrega a tela inicial com identidade e aviso de privacidade", async ({ pa
 test("busca filtra as ferramentas", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel("Buscar ferramentas").fill("marca d");
-  await expect(page.getByText("Marca d'água")).toBeVisible();
-  await expect(page.getByText("Unir PDFs")).toHaveCount(0);
+  // Escopado a <main>: a barra lateral sempre lista todas as ferramentas,
+  // sem aplicar o filtro de busca (que só afeta os cartões da tela inicial).
+  const main = page.locator("main");
+  await expect(main.getByText("Marca d'água")).toBeVisible();
+  await expect(main.getByText("Unir PDFs")).toHaveCount(0);
 });
 
 test("ferramentas exclusivas do desktop aparecem desabilitadas, nunca como botão falso ativo", async ({ page }) => {
   await page.goto("/");
-  const button = page.getByRole("button", { name: "Otimização avançada (Ghostscript)" });
+  const button = page.locator("main").getByRole("button", { name: "Otimização avançada (Ghostscript)" });
   await expect(button).toBeDisabled();
 });
 

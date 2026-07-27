@@ -68,6 +68,10 @@ jobs:
         working-directory: web
         run: npm ci --no-audit --no-fund
 
+      - name: Gerar fixtures sintéticas de teste
+        working-directory: web
+        run: npm run fixtures:generate
+
       - name: Build de produção
         working-directory: web
         run: npm run build

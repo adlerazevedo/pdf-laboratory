@@ -134,6 +134,12 @@ export function Icon({ kind, size = 20, className }: IconProps) {
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       );
+    case "menu":
+      return (
+        <svg {...common}>
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      );
     case "upload":
       return (
         <svg {...common}>
@@ -165,6 +171,61 @@ export function Icon({ kind, size = 20, className }: IconProps) {
       return (
         <svg {...common}>
           <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+        </svg>
+      );
+    case "rotate":
+      return (
+        <svg {...common}>
+          <path d="M3 12a9 9 0 1 1 3 6.7" />
+          <path d="M3 21v-5h5" />
+        </svg>
+      );
+    case "undo":
+      return (
+        <svg {...common}>
+          <path d="M9 7L4 12l5 5" />
+          <path d="M4 12h11a5 5 0 0 1 0 10h-1" />
+        </svg>
+      );
+    case "redo":
+      return (
+        <svg {...common}>
+          <path d="M15 7l5 5-5 5" />
+          <path d="M20 12H9a5 5 0 0 0 0 10h1" />
+        </svg>
+      );
+    case "duplicate":
+      return (
+        <svg {...common}>
+          <rect x="8" y="8" width="12" height="12" rx="1.5" />
+          <path d="M4 16V5a1 1 0 0 1 1-1h11" />
+        </svg>
+      );
+    case "blank-page":
+      return (
+        <svg {...common}>
+          <rect x="5" y="3" width="14" height="18" rx="1.5" strokeDasharray="3 3" />
+        </svg>
+      );
+    case "bookmarks":
+      return (
+        <svg {...common}>
+          <path d="M7 3h10a1 1 0 0 1 1 1v16l-6-4-6 4V4a1 1 0 0 1 1-1Z" />
+        </svg>
+      );
+    case "compare":
+      return (
+        <svg {...common}>
+          <rect x="3" y="4" width="8" height="16" rx="1.5" />
+          <rect x="13" y="4" width="8" height="16" rx="1.5" />
+          <path d="M11 12h2" />
+        </svg>
+      );
+    case "inspect":
+      return (
+        <svg {...common}>
+          <circle cx="10" cy="10" r="6" />
+          <path d="M14.5 14.5 20 20" />
         </svg>
       );
     default:

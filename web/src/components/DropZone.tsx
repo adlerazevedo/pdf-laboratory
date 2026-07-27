@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Icon } from "./Icon";
-import { validatePdfFile } from "../lib/pdf/validation";
+import { validatePdfFile, type ValidationResult } from "../lib/pdf/validation";
 import { markSessionActive } from "../lib/sessionActivity";
 
 type DropState = "empty" | "dragging" | "accepted" | "rejected";
@@ -10,9 +10,16 @@ interface DropZoneProps {
   multiple?: boolean;
   accept?: string;
   hint?: string;
+  /**
+   * Validador customizado (ex.: validateImageFile). Quando ausente e
+   * accept === ".pdf", usa a validação de assinatura mágica de PDF.
+   * Quando ausente e accept for outra coisa, nenhuma validação é aplicada
+   * além do próprio atributo "accept" do input de arquivo.
+   */
+  validate?: (file: File) => ValidationResult | Promise<ValidationResult>;
 }
 
-export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", hint }: DropZoneProps) {
+export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", hint, validate }: DropZoneProps) {
   const [state, setState] = useState<DropState>("empty");
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,9 +28,10 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
     async (fileList: FileList | null) => {
       if (!fileList || fileList.length === 0) return;
       const files = Array.from(fileList);
-      if (accept === ".pdf") {
+      const validator = validate ?? (accept === ".pdf" ? validatePdfFile : undefined);
+      if (validator) {
         for (const file of files) {
-          const result = await validatePdfFile(file);
+          const result = await validator(file);
           if (!result.valid) {
             setState("rejected");
             setMessage(result.reason ?? "Arquivo inválido.");
@@ -36,20 +44,24 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
       markSessionActive();
       onFilesAccepted(files);
     },
-    [accept, onFilesAccepted],
+    [accept, onFilesAccepted, validate],
   );
 
   return (
     <div
       id="DropArea"
       data-state={state}
-      role="button"
-      tabIndex={0}
-      aria-label="Área para soltar ou selecionar arquivos"
+      // Não é role="button": o controle de teclado/leitor de tela real é o
+      // <button> "Selecionar arquivos" logo abaixo. Um <div role="button">
+      // envolvendo um <button> nativo é "interactive controls nested"
+      // (regra axe-core nested-interactive, achado real nesta auditoria) —
+      // confunde navegação por Tab e leitores de tela. onClick aqui é só
+      // conveniência de mouse (clicar em qualquer parte da área, não só no
+      // botão); quem usa teclado já alcança o botão real via Tab normalmente.
+      // Sem aria-label aqui: div sem role não tem nome anunciado por leitores
+      // de tela mesmo assim, e o conteúdo visível (texto + botão nomeado) já
+      // descreve a área.
       onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
-      }}
       onDragOver={(e) => {
         e.preventDefault();
         setState("dragging");
@@ -75,6 +87,7 @@ export function DropZone({ onFilesAccepted, multiple = false, accept = ".pdf", h
         accept={accept}
         multiple={multiple}
         className="visually-hidden"
+        aria-label="Selecionar arquivos do seu computador"
         onChange={(e) => void validateAndAccept(e.target.files)}
       />
       <Icon kind="upload" size={32} className="text-muted" />

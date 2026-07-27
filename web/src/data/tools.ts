@@ -81,6 +81,30 @@ export const TOOLS: ToolDescriptor[] = [
     limitationNote: "Depende do qpdf instalado localmente — disponível apenas no aplicativo desktop.",
     icon: "repair",
   },
+  {
+    id: "bookmarks",
+    title: "Marcadores (bookmarks)",
+    description: "Listar, adicionar ou remover marcadores/sumário do PDF.",
+    availability: "desktop-only",
+    limitationNote: "Manipulação de marcadores ainda não tem motor equivalente no navegador — disponível apenas no aplicativo desktop.",
+    icon: "bookmarks",
+  },
+  {
+    id: "compare",
+    title: "Comparação de documentos",
+    description: "Compara duas versões de um PDF, página a página, e aponta as diferenças.",
+    availability: "desktop-only",
+    limitationNote: "Renderização e comparação de alta fidelidade entre documentos ainda não têm motor equivalente no navegador — disponível apenas no aplicativo desktop.",
+    icon: "compare",
+  },
+  {
+    id: "inspect",
+    title: "Inspeção técnica do PDF",
+    description: "Detalhes internos: versão do PDF, criptografia, formulários, JavaScript, imagens e anexos embutidos.",
+    availability: "desktop-only",
+    limitationNote: "Inspeção profunda da estrutura interna do PDF ainda não tem motor equivalente no navegador — disponível apenas no aplicativo desktop.",
+    icon: "inspect",
+  },
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
@@ -88,5 +112,16 @@ export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>
-  ["ocr", "visual-signature", "optimize-advanced", "office-convert", "digital-signature", "redaction", "repair"].includes(t.id),
+  [
+    "ocr",
+    "visual-signature",
+    "optimize-advanced",
+    "office-convert",
+    "digital-signature",
+    "redaction",
+    "repair",
+    "bookmarks",
+    "compare",
+    "inspect",
+  ].includes(t.id),
 );

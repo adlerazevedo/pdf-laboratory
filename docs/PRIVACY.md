@@ -25,15 +25,24 @@ formulação mais precisa acima.
 - Não há telemetria, não há Google Analytics, não há pixels de rastreamento,
   por padrão.
 - Não há armazenamento permanente de documentos — nem em disco, nem em
-  `localStorage`, nem em IndexedDB (que é usado apenas para estado técnico
-  temporário, nunca para o conteúdo de um PDF).
+  `localStorage`, nem em IndexedDB. O código da própria aplicação nunca usa
+  IndexedDB/localStorage para guardar um documento ou seu conteúdo. A única
+  gravação em IndexedDB observada vem de dentro da biblioteca Tesseract.js
+  (ferramenta de OCR), que cacheia o modelo de idioma já baixado para não
+  precisar rebaixá-lo a cada execução — nunca o seu PDF.
 - Você pode verificar isso você mesmo: abra as Ferramentas do Desenvolvedor
   do navegador, aba "Rede" (Network), carregue um PDF e execute qualquer
   operação — nenhuma requisição deverá conter o conteúdo do seu arquivo.
-- Quando uma funcionalidade futura precisar baixar um componente adicional
-  (por exemplo, um modelo de idioma para OCR via Tesseract.js), isso será
-  claramente identificado como "baixando um componente do aplicativo" — o
-  que é diferente de "enviando o seu documento".
+- **Exceção única e identificada**: a ferramenta de OCR baixa o motor
+  Tesseract.js (WASM) e o modelo do idioma escolhido (PT ou EN) de
+  `cdn.jsdelivr.net` na primeira execução de cada idioma — a interface
+  avisa isso claramente antes de você clicar em "Executar OCR". É "baixando
+  um componente do aplicativo", nunca "enviando o seu documento": o PDF
+  continua inteiramente no seu navegador, e você pode confirmar isso na
+  aba "Rede" das Ferramentas do Desenvolvedor — as únicas requisições
+  externas visíveis durante o OCR são para arquivos do próprio Tesseract.js
+  (motor e modelo), nunca para o conteúdo do seu PDF. Ver `docs/SECURITY.md`
+  para os detalhes técnicos e riscos dessa exceção à política "tudo local".
 - Um botão "Limpar sessão" permite descartar imediatamente todos os arquivos
   carregados na memória do navegador.
 

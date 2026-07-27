@@ -37,7 +37,7 @@ PySide6), não exigem que o código deste projeto adote a licença da
 dependência chamada/importada. Isso é diferente de vincular estaticamente
 código copyleft ao binário do próprio projeto.
 
-## Web — dependências planejadas/usadas
+## Web — dependências usadas
 
 | Pacote | Licença |
 |---|---|
@@ -47,7 +47,8 @@ código copyleft ao binário do próprio projeto.
 | pdfjs-dist (PDF.js) | Apache-2.0 |
 | pdf-lib | MIT |
 | JSZip | MIT / GPLv3 (dual, usamos sob MIT) |
-| Tesseract.js (planejado) | Apache-2.0 |
+| Tesseract.js | Apache-2.0 |
+| tesseract.js-core (WASM) | Apache-2.0 |
 | Vitest | MIT |
 | @testing-library/* | MIT |
 | Playwright | Apache-2.0 |

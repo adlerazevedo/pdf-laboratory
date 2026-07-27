@@ -1,4 +1,5 @@
 import type { PdfWorkerRequest, PdfWorkerResponse } from "../../workers/pdfWorker";
+import type { CompressionResult } from "./operations";
 import type { OperationProgress } from "./types";
 import { OperationCancelledError } from "./types";
 
@@ -25,7 +26,7 @@ export interface RunOptions {
 }
 
 /** Envia uma requisição ao Web Worker de PDF e resolve quando o resultado chegar. */
-export function runInWorker<T extends { bytes: Uint8Array } | { documents: Uint8Array[] }>(
+export function runInWorker<T extends { bytes: Uint8Array } | { documents: Uint8Array[] } | { result: CompressionResult }>(
   request: DistributiveOmit<PdfWorkerRequest, "id">,
   options: RunOptions = {},
 ): { promise: Promise<T>; cancel: () => void } {
@@ -44,6 +45,9 @@ export function runInWorker<T extends { bytes: Uint8Array } | { documents: Uint8
       } else if (msg.kind === "resultMany") {
         cleanup();
         resolve({ documents: msg.documents } as T);
+      } else if (msg.kind === "resultCompression") {
+        cleanup();
+        resolve({ result: msg.result } as T);
       } else if (msg.kind === "error") {
         cleanup();
         if (msg.name === "OperationCancelledError") reject(new OperationCancelledError());

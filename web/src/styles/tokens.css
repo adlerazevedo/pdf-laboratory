@@ -10,9 +10,19 @@
   --accent: #147D82;
   --accent-hover: #10666A;
   --success: #27845A;
-  --warning: #B7791F;
+  /* #B7791F original só chega a 3.64:1 sobre --surface — abaixo do 4.5:1
+     exigido pelo WCAG AA para texto normal (achado real via axe-core:
+     regra color-contrast no selo "COM LIMITAÇÕES" e no título de
+     InlineAlert nível "warning"). Escurecido para 5.37:1. */
+  --warning: #926018;
   --danger: #B83A3A;
   --info: #356FA8;
+  /* Usadas como fundo sólido com texto branco (.btn-primary, hover de
+     .btn-danger). Em modo claro coincidem com --accent/--danger (já
+     compatíveis); em modo escuro precisam de tons próprios — ver abaixo. */
+  --accent-solid: var(--accent);
+  --accent-solid-hover: var(--accent-hover);
+  --danger-solid: var(--danger);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -42,4 +52,13 @@
   --danger: #E16969;
   --info: #6EA6D8;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* --accent/--danger em modo escuro são ajustados para leitura como TEXTO
+     sobre fundo escuro (5.51:1 e 5.05:1). Como fundo SÓLIDO com texto branco
+     (.btn-primary, hover de .btn-danger), branco sobre --accent só chega a
+     2.99:1 e sobre --accent-hover a 2.38:1 — achado real via axe-core
+     (color-contrast) ao auditar os botões primários em tema escuro.
+     Tons próprios, mais escuros, só para uso como fundo sólido: */
+  --accent-solid: #257274;      /* branco sobre este tom: 5.62:1 */
+  --accent-solid-hover: #1D5A5B; /* branco sobre este tom: 7.88:1 */
+  --danger-solid: #B45454;      /* branco sobre este tom: 4.84:1 (original era 3.27:1) */
 }

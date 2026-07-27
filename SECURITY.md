@@ -27,8 +27,9 @@ corrigidas antes de qualquer divulgação pública.
 
 ### Web (`web/`)
 
-- Todo o processamento de PDF ocorre no navegador (memória, Web Workers,
-  IndexedDB apenas para estado temporário). Não existe backend nesta versão.
+- Todo o processamento de PDF ocorre no navegador (memória e Web Workers —
+  nunca IndexedDB/localStorage para o documento em si). Não existe backend
+  nesta versão.
 - Nenhum PDF do usuário é enviado a qualquer servidor, serviço de terceiros ou
   endpoint de telemetria.
 - Todo arquivo carregado é tratado como entrada não confiável: a assinatura

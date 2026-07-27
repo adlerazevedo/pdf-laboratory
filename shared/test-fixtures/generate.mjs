@@ -28,7 +28,18 @@ function buildMinimalPdf(pageCount, labelPrefix = "Pagina") {
     const stream = `BT /F1 14 Tf 40 200 Td (${text}) Tj ET`;
     objects.push({
       id: pageId,
-      body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /Font << /F1 ${3 + pageCount * 2} 0 R >> >> /Contents ${contentId} 0 R >>`,
+      // MediaBox tamanho A4 (595x842pt) — não 200x200. Achado real via
+      // Phase 7 (extração de texto com pdfjs-dist nos testes e2e): com uma
+      // página de só 200pt de largura, o texto do rótulo em 14pt já
+      // ultrapassava a borda, e a extração de texto era silenciosamente
+      // truncada assim que a posição estimada de um glifo passava do limite
+      // da página — mascarado até então porque nenhum teste verificava o
+      // texto extraído por completo, só contagem de páginas/correspondência
+      // parcial. Um tamanho de página realista (A4) evita essa e outras
+      // classes de estouro de página em qualquer teste futuro que desenhe
+      // conteúdo adicional (marca d'água, numeração, assinatura) sobre estes
+      // arquivos sintéticos.
+      body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${3 + pageCount * 2} 0 R >> >> /Contents ${contentId} 0 R >>`,
     });
     objects.push({ id: contentId, body: `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream` });
     pageObjIds.push(pageId);

@@ -37,23 +37,48 @@ npm ci
 npm run dev
 ```
 
-**URL pública:** ainda não publicada — este repositório está sendo preparado
-localmente e ainda não foi criado no GitHub nesta sessão de trabalho. Assim
-que publicado via GitHub Pages, a URL será
-`https://<usuario-ou-organização>.github.io/pdf-laboratory/` e este trecho
-será atualizado com o endereço real, confirmado por acesso direto — nunca
-antes disso.
+Versão atual: `0.1.0` (ver `web/package.json`).
 
-Detalhes completos em [`docs/WEB.md`](docs/WEB.md).
+**Repositório:** https://github.com/adlerazevedo/pdf-laboratory (público).
+O trabalho desta versão está no Pull Request
+[#16](https://github.com/adlerazevedo/pdf-laboratory/pull/16)
+(`feat/complete-pdf-laboratory-web` → `main`), ainda **não mesclado**.
+
+**URL pública:** https://adlerazevedo.github.io/pdf-laboratory/ já está no
+ar, mas — confirmado por acesso direto nesta auditoria — ainda serve a
+versão anterior a este PR (sem organizar páginas/imagens↔PDF/compressão/
+OCR/assinatura visual completos, sem a página "Web × Desktop"). O
+`deploy-pages.yml` só publica a partir de `main`; a versão descrita neste
+documento só ficará no ar depois que o PR #16 for revisado e mesclado.
+
+Detalhes completos, incluindo arquitetura do motor de PDF e o estado real
+da suíte de testes (68 testes end-to-end, todos executados de verdade
+neste ambiente), em [`docs/WEB.md`](docs/WEB.md).
 
 ## O que cada ferramenta faz, e onde está disponível
 
 Ver a tabela completa, ferramenta por ferramenta, em
-[`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md). Resumo: unir, dividir,
-extrair páginas, marca d'água, numeração de páginas e edição de metadados
-funcionam nas duas versões. Ferramentas que dependem de binários nativos ou
-de material sensível (certificados digitais) permanecem exclusivas do
-desktop — nunca aparecem como botão ativo falso na web.
+[`docs/COMPATIBILITY.md`](docs/COMPATIBILITY.md). Resumo por nível:
+
+- **Completo nas duas versões** (9 ferramentas): unir, dividir (6 modos),
+  organizar páginas (reordenar/girar/duplicar/excluir/inserir em branco),
+  extrair páginas, imagens → PDF, PDF → imagens, marca d'água, numeração de
+  páginas, edição de metadados.
+- **Completo no desktop, parcial na web** (3 ferramentas, com limitações
+  reais descritas na tabela): OCR (Tesseract.js em vez de OCRmyPDF),
+  assinatura visual/carimbo (sem validade jurídica — nunca solicita
+  certificado PFX/P12), compressão básica (recomprime só imagens JPEG já
+  embutidas).
+- **Exclusivo do desktop** (8 ferramentas): otimização avançada
+  (Ghostscript), conversão Word/Excel/PowerPoint (LibreOffice), assinatura
+  digital ICP-Brasil (certificado PFX/P12), redação segura e reparo
+  avançado (qpdf), marcadores/bookmarks, comparação de documentos, inspeção
+  técnica do PDF. Nenhuma delas aparece como botão ativo falso na web — a
+  própria versão web tem uma página "Web × Desktop", acessível pela barra
+  lateral, explicando a diferença entre "limitação permanente" (depende de
+  binário nativo ou material sensível) e "ainda não portada" (sem motor
+  equivalente construído, mas sem impedimento técnico definitivo), e como
+  obter o desktop.
 
 ## Privacidade
 
@@ -64,6 +89,20 @@ Nenhuma das duas versões envia seus documentos para um servidor. Detalhes em
 
 Política de reporte de vulnerabilidades em [`SECURITY.md`](SECURITY.md);
 detalhes técnicos em [`docs/SECURITY.md`](docs/SECURITY.md).
+
+## CI/CD, Dependabot e CodeQL
+
+[`docs/CI.md`](docs/CI.md) — workflows do GitHub Actions, política de
+triagem do Dependabot e o passo manual único necessário no CodeQL antes
+da primeira publicação.
+
+## Publicação
+
+[`docs/PUBLISHING.md`](docs/PUBLISHING.md) — checklist de pré-publicação
+(segredos, `.gitignore`, governança, validação técnica — tudo já
+verificado neste repositório) e o passo a passo real para criar o
+repositório no GitHub e publicar, já que isso exige credenciais que esta
+ferramenta não tem.
 
 ## Arquitetura
 
