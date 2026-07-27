@@ -37,15 +37,19 @@ npm ci
 npm run dev
 ```
 
-Versão atual: `0.1.0` (ver `web/package.json`) — ainda não publicada
-publicamente, ver nota abaixo.
+Versão atual: `0.1.0` (ver `web/package.json`).
 
-**URL pública:** ainda não publicada — este repositório está sendo preparado
-localmente e ainda não foi criado no GitHub nesta sessão de trabalho. Assim
-que publicado via GitHub Pages, a URL será
-`https://<usuario-ou-organização>.github.io/pdf-laboratory/` e este trecho
-será atualizado com o endereço real, confirmado por acesso direto — nunca
-antes disso.
+**Repositório:** https://github.com/adlerazevedo/pdf-laboratory (público).
+O trabalho desta versão está no Pull Request
+[#16](https://github.com/adlerazevedo/pdf-laboratory/pull/16)
+(`feat/complete-pdf-laboratory-web` → `main`), ainda **não mesclado**.
+
+**URL pública:** https://adlerazevedo.github.io/pdf-laboratory/ já está no
+ar, mas — confirmado por acesso direto nesta auditoria — ainda serve a
+versão anterior a este PR (sem organizar páginas/imagens↔PDF/compressão/
+OCR/assinatura visual completos, sem a página "Web × Desktop"). O
+`deploy-pages.yml` só publica a partir de `main`; a versão descrita neste
+documento só ficará no ar depois que o PR #16 for revisado e mesclado.
 
 Detalhes completos, incluindo arquitetura do motor de PDF e o estado real
 da suíte de testes (68 testes end-to-end, todos executados de verdade

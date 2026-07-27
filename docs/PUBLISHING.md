@@ -1,82 +1,69 @@
 # Checklist de publicação — PDF Laboratory
 
-Estado no commit `d74f762` (branch `feature/web-organize-images-tools`),
-verificado nesta sessão.
+## Estado atual (verificado nesta auditoria pré-merge)
 
-## O que já foi verificado e está OK para publicar
+- **Repositório:** publicado em https://github.com/adlerazevedo/pdf-laboratory.
+- **Branch:** `feat/complete-pdf-laboratory-web`, publicada (`git push` já
+  feito pelo usuário, fora desta ferramenta).
+- **Pull Request:** [#16](https://github.com/adlerazevedo/pdf-laboratory/pull/16),
+  aberto, de `feat/complete-pdf-laboratory-web` para `main`, ainda **não
+  mesclado**.
+- **Commit HEAD da branch:** `07d25e5` (merge de `af1ead0`, o commit final
+  produzido nas Fases 1–10 desta sessão, com `17f3f92` de `main` — um
+  commit de `main` que só mudou a permissão do arquivo
+  `desktop/PDF_Laboratory.py` de executável para não-executável, sem
+  alterar uma linha de conteúdo; checksum SHA-256 idêntico ao já
+  documentado).
+- **GitHub Pages:** já está no ar em https://adlerazevedo.github.io/pdf-laboratory/,
+  mas confirmado por navegação real nesta auditoria que ainda serve a
+  versão **anterior à Fase 5** (sem organizar páginas com o conjunto
+  completo de ferramentas atual, sem a página "Web × Desktop") — o
+  `deploy-pages.yml` só publica a partir de `main`, então a versão deste
+  PR só ficará no ar depois de mesclado.
+- **CI real do PR #16:** CodeQL passou (2 jobs); `web-tests` falhou no job
+  `e2e` (causa raiz identificada e corrigida nesta auditoria — ver
+  `docs/CI.md` e o relatório da Fase 10).
+- **Dependabot:** 15 PRs abertos, todos major, nenhum mesclado, nenhum
+  necessário para a correção acima (ver `docs/CI.md`).
 
-- [x] **Segredos**: varredura em todo o histórico do git (`git log --all -p`),
-  não só no diff recente. Nenhuma credencial, chave privada, token ou senha
-  real encontrada — os únicos "password"-like strings são senhas de teste
-  óbvias usadas pelo `--self-test` do desktop (`teste-123`, `autoteste123`,
-  `senha_errada`). Nenhum arquivo `.env`/`.pem`/`.key`/`.pfx`/`.p12` rastreado.
-- [x] **`.gitignore`**: cobre segredos, `node_modules`, `dist`,
-  `test-results`, `__pycache__`, fixtures geradas e documentos pessoais.
-  Confirmado que nenhum desses padrões está de fato rastreado.
-- [x] **Tamanho dos arquivos**: nada anômalo — o maior é o próprio
-  `desktop/PDF_Laboratory.py` (478 KB, single-file por design) e
-  `web/package-lock.json` (314 KB, esperado e deve continuar versionado
-  para instalações reprodutíveis via `npm ci`).
-- [x] **Arquivos de governança**: LICENSE (MIT), THIRD_PARTY_NOTICES.md
-  (lista real e atual de dependências — inclui Tesseract.js, JSZip,
-  vite-plugin-pwa, adicionadas nas fases mais recentes), CODE_OF_CONDUCT.md,
-  CONTRIBUTING.md, SECURITY.md, issue templates e PR template — todos
-  presentes e consistentes com o estado atual do código.
-- [x] **Duas imprecisões reais corrigidas nesta auditoria**: SECURITY.md e
-  docs/PRIVACY.md afirmavam vagamente que IndexedDB era usado para "estado
-  técnico temporário" — verificado via grep no código-fonte e no service
-  worker gerado que a própria aplicação nunca usa IndexedDB; a única fonte
-  real é o cache interno de modelos de idioma do Tesseract.js. Corrigido
-  para descrever isso com precisão, não uma alegação vaga.
-- [x] **Árvore de trabalho limpa**: `git status` sem alterações pendentes;
-  todas as fases (1 a 10) commitadas na branch `feature/web-organize-images-tools`.
-- [x] **Validação técnica** (repetida nesta sessão, já que o bump de versão
-  e os ajustes de documentação tocaram `package.json`): `tsc -b --noEmit`,
-  `oxlint`, `vitest run` (67/67) e `vite build`, todos limpos.
-- [x] **Suíte Playwright completa** (Fase 7): 16 arquivos de spec, 68 testes,
-  executados de verdade contra um build de produção.
-- [x] **CI como código**: 5 workflows do GitHub Actions revisados e com
-  sintaxe YAML validada; `dependabot.yml` com agrupamento de atualizações
-  menores; gotcha conhecido do CodeQL (conflito "default setup" vs
-  "advanced setup") documentado com o passo manual exato necessário no
-  primeiro push (`docs/CI.md`).
-- [x] **Checksum do desktop**: `sha256: 32fb44e966f56975c0e970fb52cbb9123290fcbf57464b80c59cd7bdfd6f7a53`
-  (`desktop/PDF_Laboratory.py`), igual ao já publicado em `desktop/CHECKSUMS.txt`
-  e no README.
+## Auditoria de segredos/governança (repetida sobre o commit 07d25e5 real)
 
-## O que NÃO pôde ser feito nesta sessão — e por quê
+- [x] **Segredos**: varredura em todo o histórico do git do repositório
+  público (`git log --all -p`). Nenhuma credencial, chave privada, token
+  ou senha real encontrada — os únicos "password"-like strings são senhas
+  de teste óbvias usadas pelo `--self-test` do desktop (`teste-123`,
+  `autoteste123`, `senha_errada`). Nenhum arquivo
+  `.env`/`.pem`/`.key`/`.pfx`/`.p12` rastreado. Nenhum caminho pessoal
+  (`/home/`, `C:\Users\`, `/Users/`) em nenhum commit.
+- [x] **`.gitignore`** e tamanho de arquivos: nada anômalo rastreado
+  (maior arquivo é `desktop/PDF_Laboratory.py`, 478 KB, single-file por
+  design; nenhum sourcemap versionado — só gerados no build).
+- [x] **Arquivos de governança**: LICENSE (MIT), THIRD_PARTY_NOTICES.md,
+  CODE_OF_CONDUCT.md, CONTRIBUTING.md, SECURITY.md, issue templates e PR
+  template — presentes e consistentes com o código de `07d25e5`.
+- [x] **Privacidade/segurança do código real**: confirmado por grep direto
+  no código-fonte de `07d25e5` (não só na documentação) — `localStorage`
+  usado somente para preferência de tema; zero ocorrências de
+  `indexedDB` no service worker/workbox gerado (a única fonte real de
+  IndexedDB em tempo de execução é interna ao Tesseract.js);
+  `globPatterns` do Workbox nunca casa `.pdf`; nenhum campo de
+  certificado PFX/P12 em nenhum tipo de opção da versão web; único
+  `console.*` do código-fonte é um aviso informativo de PWA pronto para
+  uso offline, sem dado sensível.
+- [x] **Dependências vulneráveis**: `npm audit` reporta 10 vulnerabilidades
+  altas, todas em ferramentas de build/teste (`workbox-build` via cadeia
+  `ejs`→`jake`→`filelist`→`minimatch`→`brace-expansion`, e
+  `@vitest/coverage-v8`) — nenhuma em dependência de runtime enviada ao
+  navegador do usuário (`react`, `pdf-lib`, `pdfjs-dist`, `jszip`,
+  `tesseract.js`).
 
-Criar o repositório no GitHub e abrir o PR exige acesso real ao GitHub
-(API autenticada ou `git push` com credenciais). O conector GitHub deste
-ambiente está listado como exigindo autenticação OAuth, e esta sessão é
-não-interativa — não há como completar esse fluxo de login aqui. Por isso:
+## O que ainda depende de ação do usuário
 
-- Nenhum repositório foi criado no GitHub.
-- Nenhum `git push` foi executado (não há `git remote` configurado).
-- Nenhum Pull Request foi aberto.
-- Os workflows de CI, o Dependabot e o CodeQL nunca rodaram de fato no
-  GitHub — só localmente, como descrito acima e em `docs/CI.md`.
-
-## Como publicar de fato (passo a passo, para você executar)
-
-1. Criar um repositório vazio no GitHub (via github.com ou `gh repo create`).
-2. A partir da raiz deste checkout local:
-   ```bash
-   git remote add origin git@github.com:<seu-usuario>/pdf-laboratory.git
-   git push -u origin feature/web-organize-images-tools
-   git push origin main
-   ```
-3. Antes do primeiro push que dispare o `codeql.yml`: em
-   *Settings → Code security and analysis → Code scanning*, deixar como
-   **Advanced** (nunca "Default") — ver `docs/CI.md` para o porquê.
-4. Em *Settings → Pages*, configurar a fonte como "GitHub Actions" (o
-   workflow `deploy-pages.yml` já está pronto para publicar `web/dist`).
-5. Abrir o Pull Request de `feature/web-organize-images-tools` para `main`
-   (pela interface do GitHub, ou `gh pr create`).
-6. Depois que o Pages publicar, confirmar a URL real por acesso direto e
-   só então atualizar o trecho "URL pública: ainda não publicada" no
-   README.md e no `manifest`/`start_url` se necessário.
-
-Alternativa: se você conectar o conector do GitHub nesta ferramenta (via
-as configurações de conectores do Claude), posso executar os passos 1, 2
-e 5 diretamente na próxima sessão.
+- **Merge do PR #16**: decisão do usuário, não desta auditoria (ver
+  recomendação no relatório final da Fase 10).
+- **Corrigir a falha do job `e2e`** antes ou depois do merge: correção já
+  aplicada em branch local `fase10-auditoria-pre-merge` (ver bundle
+  gerado nesta sessão) — precisa ser aplicada e enviada ao PR por quem
+  tem push real ao repositório.
+- **Após o merge**: confirmar que `deploy-pages.yml` publica com sucesso e
+  só então tratar a URL pública como refletindo a versão atual.

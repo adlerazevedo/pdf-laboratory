@@ -2,8 +2,12 @@
 
 Aplicativo web para manipulação de PDFs, executado inteiramente no
 navegador — sem backend, sem upload de documentos. Versão atual: `0.1.0`
-(ver `package.json`), ainda não publicada publicamente (ver `README.md` na
-raiz do repositório). Ver a documentação completa em
+(ver `package.json`). Código em
+[github.com/adlerazevedo/pdf-laboratory](https://github.com/adlerazevedo/pdf-laboratory),
+Pull Request [#16](https://github.com/adlerazevedo/pdf-laboratory/pull/16)
+ainda não mesclado — a versão publicada em
+https://adlerazevedo.github.io/pdf-laboratory/ é anterior a este PR (ver
+`README.md` na raiz do repositório). Ver a documentação completa em
 [`../docs/WEB.md`](../docs/WEB.md), [`../docs/PRIVACY.md`](../docs/PRIVACY.md)
 e [`../docs/COMPATIBILITY.md`](../docs/COMPATIBILITY.md).
 

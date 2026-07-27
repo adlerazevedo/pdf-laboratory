@@ -6,9 +6,12 @@ a qual delas se refere: **[desktop]** ou **[web]**.
 
 ## [Não lançado]
 
-Nenhuma das duas aplicações foi publicada publicamente ainda (sem release do
-GitHub, sem tag, sem URL do GitHub Pages) — todas as entradas abaixo
-descrevem o estado atual do repositório local.
+Sem tag/release de nenhuma das duas aplicações ainda. O repositório está
+publicado (https://github.com/adlerazevedo/pdf-laboratory) e o trabalho
+abaixo está no Pull Request #16, ainda não mesclado em `main`. O GitHub
+Pages (https://adlerazevedo.github.io/pdf-laboratory/) já está no ar, mas
+— confirmado por acesso direto — ainda serve uma versão anterior a este
+PR; as entradas abaixo só refletirão o site publicado depois do merge.
 
 ### Adicionado
 
