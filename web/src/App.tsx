@@ -3,6 +3,7 @@ import { AppShell } from "./components/AppShell";
 import { HomeScreen } from "./components/HomeScreen";
 import { EditorTool } from "./components/tools/EditorTool";
 import { FormsTool } from "./components/tools/FormsTool";
+import { FormFillTool } from "./components/tools/FormFillTool";
 import { PageToolsTool } from "./components/tools/PageToolsTool";
 import { RedactionTool } from "./components/tools/RedactionTool";
 import { MergeTool } from "./components/tools/MergeTool";
@@ -60,6 +61,7 @@ export default function App() {
         {activeToolId === "web-desktop" && <WebDesktopScreen />}
         {tool?.id === "edit" && <EditorTool />}
         {tool?.id === "forms" && <FormsTool />}
+        {tool?.id === "form-fill" && <FormFillTool />}
         {tool?.id === "page-tools" && <PageToolsTool />}
         {tool?.id === "redaction" && <RedactionTool />}
         {tool?.id === "merge" && <MergeTool />}
@@ -75,7 +77,7 @@ export default function App() {
         {tool?.id === "visual-signature" && <VisualSignatureTool />}
         {tool?.id === "ocr" && <OcrTool />}
         {tool &&
-          !["edit", "forms", "page-tools", "redaction", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature", "ocr"].includes(
+          !["edit", "forms", "form-fill", "page-tools", "redaction", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature", "ocr"].includes(
             tool.id,
           ) && <PlaceholderTool tool={tool} />}
       </div>

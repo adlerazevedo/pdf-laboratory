@@ -25,6 +25,13 @@ export const TOOLS: ToolDescriptor[] = [
     icon: "form",
   },
   {
+    id: "form-fill",
+    title: "Preencher formulário",
+    description: "Abra um PDF com campos de formulário já existentes e preencha os valores, com opção de achatar ao salvar.",
+    availability: "browser",
+    icon: "form-fill",
+  },
+  {
     id: "page-tools",
     title: "Ferramentas de página avançadas",
     description: "Caixas de página (CropBox), numeração Bates, anexos, marcadores e links internos.",
@@ -130,7 +137,7 @@ export const TOOLS: ToolDescriptor[] = [
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
-  ["edit", "merge", "forms", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
+  ["edit", "merge", "forms", "form-fill", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>

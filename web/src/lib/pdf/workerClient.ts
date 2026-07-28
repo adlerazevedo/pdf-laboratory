@@ -31,7 +31,8 @@ export function runInWorker<
     | { bytes: Uint8Array }
     | { documents: Uint8Array[] }
     | { result: CompressionResult }
-    | { bytes: Uint8Array; signaturePlaceholders: Array<{ name: string; pageIndex: number }>; hadXFA: boolean },
+    | { bytes: Uint8Array; signaturePlaceholders: Array<{ name: string; pageIndex: number }>; hadXFA: boolean }
+    | { bytes: Uint8Array; skippedReadOnly: string[] },
 >(
   request: DistributiveOmit<PdfWorkerRequest, "id">,
   options: RunOptions = {},
@@ -57,6 +58,9 @@ export function runInWorker<
       } else if (msg.kind === "resultForm") {
         cleanup();
         resolve({ bytes: msg.bytes, signaturePlaceholders: msg.signaturePlaceholders, hadXFA: msg.hadXFA } as T);
+      } else if (msg.kind === "resultFill") {
+        cleanup();
+        resolve({ bytes: msg.bytes, skippedReadOnly: msg.skippedReadOnly } as T);
       } else if (msg.kind === "error") {
         cleanup();
         if (msg.name === "OperationCancelledError") reject(new OperationCancelledError());

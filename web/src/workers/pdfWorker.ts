@@ -30,6 +30,8 @@ import { applyRedactionRaster } from "../lib/pdf/redaction";
 import type { ApplyRedactionOptions } from "../lib/pdf/redaction";
 import { buildAcroForm } from "../lib/pdf/formExport";
 import type { FormField } from "../lib/pdf/formTypes";
+import { fillFormFields } from "../lib/pdf/formFill";
+import type { FillValue } from "../lib/pdf/formFill";
 
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
@@ -53,6 +55,7 @@ export type PdfWorkerRequest =
   | { id: string; kind: "applyPageAdvanced"; bytes: Uint8Array; options: PageAdvancedOptions }
   | { id: string; kind: "applyRedaction"; bytes: Uint8Array; options: ApplyRedactionOptions }
   | { id: string; kind: "buildAcroForm"; bytes: Uint8Array; fields: FormField[] }
+  | { id: string; kind: "fillFormFields"; bytes: Uint8Array; values: Record<string, FillValue>; flatten?: boolean }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -67,6 +70,7 @@ export type PdfWorkerResponse =
       signaturePlaceholders: Array<{ name: string; pageIndex: number }>;
       hadXFA: boolean;
     }
+  | { id: string; kind: "resultFill"; bytes: Uint8Array; skippedReadOnly: string[] }
   | { id: string; kind: "error"; message: string; name: string };
 
 const cancelTokens = new Map<string, { cancelled: boolean }>();
@@ -179,6 +183,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
           signaturePlaceholders: built.signaturePlaceholders,
           hadXFA: built.hadXFA,
         };
+        break;
+      }
+      case "fillFormFields": {
+        const filled = await fillFormFields(msg.bytes, { values: msg.values, flatten: msg.flatten });
+        response = { id: msg.id, kind: "resultFill", bytes: filled.bytes, skippedReadOnly: filled.skippedReadOnly };
         break;
       }
     }

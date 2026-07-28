@@ -246,6 +246,15 @@ export function Icon({ kind, size = 20, className }: IconProps) {
           <path d="M12.5 17.1h4" />
         </svg>
       );
+    case "form-fill":
+      return (
+        <svg {...common}>
+          <rect x="4" y="3" width="16" height="18" rx="1.5" />
+          <path d="M8 8h8" />
+          <path d="M8 12.5h8" />
+          <path d="m8.5 16.5 2 2 4-4" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>
