@@ -28,6 +28,8 @@ import { applyPageAdvancedOperations } from "../lib/pdf/pageAdvanced";
 import type { PageAdvancedOptions } from "../lib/pdf/pageAdvanced";
 import { applyRedactionRaster } from "../lib/pdf/redaction";
 import type { ApplyRedactionOptions } from "../lib/pdf/redaction";
+import { buildAcroForm } from "../lib/pdf/formExport";
+import type { FormField } from "../lib/pdf/formTypes";
 
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
@@ -50,6 +52,7 @@ export type PdfWorkerRequest =
   | { id: string; kind: "applyEditorObjects"; bytes: Uint8Array; objects: EditorObject[] }
   | { id: string; kind: "applyPageAdvanced"; bytes: Uint8Array; options: PageAdvancedOptions }
   | { id: string; kind: "applyRedaction"; bytes: Uint8Array; options: ApplyRedactionOptions }
+  | { id: string; kind: "buildAcroForm"; bytes: Uint8Array; fields: FormField[] }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -57,6 +60,13 @@ export type PdfWorkerResponse =
   | { id: string; kind: "result"; bytes: Uint8Array }
   | { id: string; kind: "resultMany"; documents: Uint8Array[] }
   | { id: string; kind: "resultCompression"; result: import("../lib/pdf/operations").CompressionResult }
+  | {
+      id: string;
+      kind: "resultForm";
+      bytes: Uint8Array;
+      signaturePlaceholders: Array<{ name: string; pageIndex: number }>;
+      hadXFA: boolean;
+    }
   | { id: string; kind: "error"; message: string; name: string };
 
 const cancelTokens = new Map<string, { cancelled: boolean }>();
@@ -158,6 +168,17 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       case "applyRedaction": {
         const bytes = await applyRedactionRaster(msg.bytes, msg.options);
         response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "buildAcroForm": {
+        const built = await buildAcroForm(msg.bytes, msg.fields);
+        response = {
+          id: msg.id,
+          kind: "resultForm",
+          bytes: built.bytes,
+          signaturePlaceholders: built.signaturePlaceholders,
+          hadXFA: built.hadXFA,
+        };
         break;
       }
     }

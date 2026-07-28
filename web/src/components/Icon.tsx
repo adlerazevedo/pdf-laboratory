@@ -235,6 +235,17 @@ export function Icon({ kind, size = 20, className }: IconProps) {
           <path d="M13.5 6.5 17.5 10.5" />
         </svg>
       );
+    case "form":
+      return (
+        <svg {...common}>
+          <rect x="4" y="3" width="16" height="18" rx="1.5" />
+          <path d="M8 8h5" />
+          <rect x="8" y="12" width="2.2" height="2.2" rx="0.4" />
+          <path d="M12.5 13.1h4" />
+          <rect x="8" y="16" width="2.2" height="2.2" rx="0.4" />
+          <path d="M12.5 17.1h4" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>

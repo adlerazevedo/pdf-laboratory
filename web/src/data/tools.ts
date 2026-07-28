@@ -18,6 +18,13 @@ export const TOOLS: ToolDescriptor[] = [
   },
   { id: "merge", title: "Unir PDFs", description: "Combine vários arquivos PDF em um único documento, na ordem que você escolher.", availability: "browser", icon: "merge" },
   {
+    id: "forms",
+    title: "Formulários (AcroForm)",
+    description: "Crie campos de formulário reais — texto, caixas de seleção, opções, listas — clicando sobre as páginas do PDF.",
+    availability: "browser",
+    icon: "form",
+  },
+  {
     id: "page-tools",
     title: "Ferramentas de página avançadas",
     description: "Caixas de página (CropBox), numeração Bates, anexos, marcadores e links internos.",
@@ -123,7 +130,7 @@ export const TOOLS: ToolDescriptor[] = [
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
-  ["edit", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
+  ["edit", "merge", "forms", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>
