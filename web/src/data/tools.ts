@@ -17,6 +17,13 @@ export const TOOLS: ToolDescriptor[] = [
     icon: "edit",
   },
   { id: "merge", title: "Unir PDFs", description: "Combine vários arquivos PDF em um único documento, na ordem que você escolher.", availability: "browser", icon: "merge" },
+  {
+    id: "page-tools",
+    title: "Ferramentas de página avançadas",
+    description: "Caixas de página (CropBox), numeração Bates, anexos, marcadores e links internos.",
+    availability: "browser",
+    icon: "bookmarks",
+  },
   { id: "split", title: "Dividir PDF", description: "Separe um PDF em vários arquivos por intervalos de página.", availability: "browser", icon: "split" },
   { id: "organize", title: "Organizar páginas", description: "Reordene, gire, duplique, exclua e insira páginas em branco.", availability: "browser", icon: "organize" },
   { id: "extract", title: "Extrair páginas", description: "Salve um subconjunto de páginas como um novo PDF.", availability: "browser", icon: "extract" },
@@ -116,7 +123,7 @@ export const TOOLS: ToolDescriptor[] = [
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
-  ["edit", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress"].includes(t.id),
+  ["edit", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>

@@ -24,6 +24,8 @@ import {
 import type { PageState, SimpleMetadata } from "../lib/pdf/types";
 import { applyEditorObjects } from "../lib/pdf/editorExport";
 import type { EditorObject } from "../lib/pdf/editorTypes";
+import { applyPageAdvancedOperations } from "../lib/pdf/pageAdvanced";
+import type { PageAdvancedOptions } from "../lib/pdf/pageAdvanced";
 
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
@@ -44,6 +46,7 @@ export type PdfWorkerRequest =
       options?: ImagesToPdfOptions;
     }
   | { id: string; kind: "applyEditorObjects"; bytes: Uint8Array; objects: EditorObject[] }
+  | { id: string; kind: "applyPageAdvanced"; bytes: Uint8Array; options: PageAdvancedOptions }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -141,6 +144,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       }
       case "applyEditorObjects": {
         const bytes = await applyEditorObjects(msg.bytes, { objects: msg.objects }, onProgress, token);
+        response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "applyPageAdvanced": {
+        const bytes = await applyPageAdvancedOperations(msg.bytes, msg.options, onProgress, token);
         response = { id: msg.id, kind: "result", bytes };
         break;
       }
