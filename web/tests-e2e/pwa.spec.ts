@@ -79,4 +79,28 @@ test.describe("PWA e caminho-base (Fase 7)", () => {
     await page.goto("/pdf-laboratory/");
     await expect(page.getByText("O que você deseja fazer?")).toBeVisible();
   });
+
+  test("Etapa 5: apos o primeiro carregamento, o app continua funcionando com a rede totalmente offline", async ({ page, context }) => {
+    // Primeiro carregamento: com rede normal, esperando o service worker ficar
+    // ativo (o que so acontece depois do precache do Workbox terminar).
+    await page.goto("/pdf-laboratory/");
+    await page.evaluate(async () => {
+      if ("serviceWorker" in navigator) await navigator.serviceWorker.ready;
+    });
+    await page.waitForTimeout(500); // pequena folga para o precache assentar
+
+    // Agora derruba a rede de verdade (nao e apenas simulacao visual do
+    // DevTools — o contexto do Playwright bloqueia as requisicoes reais).
+    await context.setOffline(true);
+    try {
+      await page.reload();
+      await expect(page.getByText("O que você deseja fazer?")).toBeVisible({ timeout: 10_000 });
+      // navegar para uma ferramenta especifica tambem deve funcionar offline,
+      // confirmando que o shell da aplicacao inteiro veio do cache do SW.
+      await page.getByRole("button", { name: "Unir PDFs", exact: true }).first().click();
+      await expect(page.getByText(/Unir PDFs/i).first()).toBeVisible();
+    } finally {
+      await context.setOffline(false);
+    }
+  });
 });
