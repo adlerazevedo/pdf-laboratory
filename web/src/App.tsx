@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "./components/AppShell";
 import { HomeScreen } from "./components/HomeScreen";
+import { EditorTool } from "./components/tools/EditorTool";
 import { MergeTool } from "./components/tools/MergeTool";
 import { SplitTool } from "./components/tools/SplitTool";
 import { OrganizeTool } from "./components/tools/OrganizeTool";
@@ -54,6 +55,7 @@ export default function App() {
       <div key={sessionKey}>
         {!tool && activeToolId !== "web-desktop" && <HomeScreen onSelectTool={setActiveToolId} />}
         {activeToolId === "web-desktop" && <WebDesktopScreen />}
+        {tool?.id === "edit" && <EditorTool />}
         {tool?.id === "merge" && <MergeTool />}
         {tool?.id === "split" && <SplitTool />}
         {tool?.id === "organize" && <OrganizeTool />}
@@ -67,7 +69,7 @@ export default function App() {
         {tool?.id === "visual-signature" && <VisualSignatureTool />}
         {tool?.id === "ocr" && <OcrTool />}
         {tool &&
-          !["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature", "ocr"].includes(
+          !["edit", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "visual-signature", "ocr"].includes(
             tool.id,
           ) && <PlaceholderTool tool={tool} />}
       </div>

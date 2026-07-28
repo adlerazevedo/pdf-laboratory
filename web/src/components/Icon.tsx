@@ -228,6 +228,13 @@ export function Icon({ kind, size = 20, className }: IconProps) {
           <path d="M14.5 14.5 20 20" />
         </svg>
       );
+    case "edit":
+      return (
+        <svg {...common}>
+          <path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8L17.3 5.5a2 2 0 0 0-2.8 0L4 16v4Z" />
+          <path d="M13.5 6.5 17.5 10.5" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>

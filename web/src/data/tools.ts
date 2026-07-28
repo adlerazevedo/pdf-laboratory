@@ -8,6 +8,14 @@ import type { ToolDescriptor } from "../lib/pdf/types";
  *    nunca vira um botão ativo falso; mostra "Disponível no aplicativo desktop".
  */
 export const TOOLS: ToolDescriptor[] = [
+  {
+    id: "edit",
+    title: "Editar PDF",
+    description: "Adicione texto, imagens, formas e links diretamente sobre as páginas do seu PDF.",
+    availability: "limited",
+    limitationNote: "Isto adiciona novos objetos sobre o conteúdo existente — não reescreve texto já existente no PDF (edição real de texto incorporado tem suporte limitado; veja docs/PDF_EDITOR.md).",
+    icon: "edit",
+  },
   { id: "merge", title: "Unir PDFs", description: "Combine vários arquivos PDF em um único documento, na ordem que você escolher.", availability: "browser", icon: "merge" },
   { id: "split", title: "Dividir PDF", description: "Separe um PDF em vários arquivos por intervalos de página.", availability: "browser", icon: "split" },
   { id: "organize", title: "Organizar páginas", description: "Reordene, gire, duplique, exclua e insira páginas em branco.", availability: "browser", icon: "organize" },
@@ -108,7 +116,7 @@ export const TOOLS: ToolDescriptor[] = [
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
-  ["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress"].includes(t.id),
+  ["edit", "merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress"].includes(t.id),
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>

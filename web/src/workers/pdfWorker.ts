@@ -22,6 +22,8 @@ import {
   type WatermarkOptions,
 } from "../lib/pdf/operations";
 import type { PageState, SimpleMetadata } from "../lib/pdf/types";
+import { applyEditorObjects } from "../lib/pdf/editorExport";
+import type { EditorObject } from "../lib/pdf/editorTypes";
 
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
@@ -41,6 +43,7 @@ export type PdfWorkerRequest =
       images: Array<{ bytes: Uint8Array; mimeType: "image/jpeg" | "image/png" }>;
       options?: ImagesToPdfOptions;
     }
+  | { id: string; kind: "applyEditorObjects"; bytes: Uint8Array; objects: EditorObject[] }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -133,6 +136,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       }
       case "addSearchableTextLayer": {
         const bytes = await addSearchableTextLayer(msg.bytes, msg.pages, onProgress, token);
+        response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "applyEditorObjects": {
+        const bytes = await applyEditorObjects(msg.bytes, { objects: msg.objects }, onProgress, token);
         response = { id: msg.id, kind: "result", bytes };
         break;
       }
