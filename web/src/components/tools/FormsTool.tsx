@@ -5,7 +5,7 @@ import { ProgressBar } from "../ProgressBar";
 import { InlineAlert } from "../InlineAlert";
 import { ResultCard } from "../ResultCard";
 import { loadPdfDocument, PdfOpenError, PdfPasswordRequiredError } from "../../lib/pdf/loadDocument";
-import { renderPageThumbnail } from "../../lib/pdf/thumbnails";
+import { renderPageThumbnail, extractPageTextItems } from "../../lib/pdf/thumbnails";
 import { runInWorker } from "../../lib/pdf/workerClient";
 import { downloadBytes } from "../../lib/pdf/zip";
 import { markSessionActive } from "../../lib/sessionActivity";
@@ -20,6 +20,8 @@ import {
   type FormFieldKind,
   type FormHistory,
 } from "../../lib/pdf/formTypes";
+import { detectFieldSuggestions, type DetectedFieldSuggestion } from "../../lib/pdf/formDetect";
+import type { TextItemInput } from "../../lib/pdf/redaction";
 import type { OperationProgress } from "../../lib/pdf/types";
 
 type Status = "idle" | "loading" | "editing" | "processing" | "done" | "error";
@@ -95,6 +97,8 @@ export function FormsTool() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [placeKind, setPlaceKind] = useState<FormFieldKind | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [suggestions, setSuggestions] = useState<DetectedFieldSuggestion[]>([]);
+  const [detecting, setDetecting] = useState(false);
 
   const fields = history.present;
   const selectedField = fields.find((f) => f.id === selectedId) ?? null;
@@ -149,6 +153,72 @@ export function FormsTool() {
     if (!el) return { x: 0, y: 0 };
     const rect = el.getBoundingClientRect();
     return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
+  }
+
+  function uniqueAgainst(base: string, existingNames: string[]): string {
+    let name = base;
+    let n = 1;
+    while (existingNames.includes(name)) {
+      n += 1;
+      name = `${base}_${n}`;
+    }
+    return name;
+  }
+
+  async function runDetection() {
+    if (!bytes || pages.length === 0) return;
+    setDetecting(true);
+    try {
+      const allItems: TextItemInput[] = [];
+      const pageWidthByIndex: Record<number, number> = {};
+      for (const p of pages) {
+        pageWidthByIndex[p.pageIndex] = p.widthPt;
+        const items = await extractPageTextItems(bytes, p.pageIndex);
+        for (const it of items) allItems.push({ pageIndex: p.pageIndex, ...it });
+      }
+      const found = detectFieldSuggestions(allItems, pageWidthByIndex);
+      setSuggestions(found);
+    } finally {
+      setDetecting(false);
+    }
+  }
+
+  function acceptSuggestion(suggestion: DetectedFieldSuggestion) {
+    const existingNames = fields.map((f) => f.name);
+    const name = uniqueAgainst(suggestion.suggestedName, existingNames);
+    const field: FormField = {
+      ...makeDefaultField(suggestion.kind, suggestion.pageIndex, suggestion.x, suggestion.y, existingNames),
+      name,
+      width: suggestion.width,
+      height: suggestion.height,
+    };
+    commit([...fields, field]);
+    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+  }
+
+  function discardSuggestion(id: string) {
+    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function acceptAllSuggestions() {
+    let existingNames = fields.map((f) => f.name);
+    const newFields: FormField[] = [];
+    for (const suggestion of suggestions) {
+      const name = uniqueAgainst(suggestion.suggestedName, existingNames);
+      existingNames = [...existingNames, name];
+      newFields.push({
+        ...makeDefaultField(suggestion.kind, suggestion.pageIndex, suggestion.x, suggestion.y, existingNames),
+        name,
+        width: suggestion.width,
+        height: suggestion.height,
+      });
+    }
+    commit([...fields, ...newFields]);
+    setSuggestions([]);
+  }
+
+  function discardAllSuggestions() {
+    setSuggestions([]);
   }
 
   function handlePageClick(pageIndex: number, e: React.MouseEvent) {
@@ -346,7 +416,38 @@ export function FormsTool() {
         <button type="button" className="btn" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} aria-label="Diminuir zoom">−</button>
         <span style={{ alignSelf: "center", fontSize: 13, minWidth: 42, textAlign: "center" }}>{Math.round(zoom * 100)}%</span>
         <button type="button" className="btn" onClick={() => setZoom((z) => Math.min(2, z + 0.1))} aria-label="Aumentar zoom">+</button>
+        <span style={{ width: 1, background: "var(--border)", margin: "0 4px" }} />
+        <button type="button" className="btn" disabled={detecting} onClick={() => void runDetection()}>
+          {detecting ? "Detectando…" : "Detectar campos automaticamente"}
+        </button>
       </div>
+
+      {suggestions.length > 0 && (
+        <div id="FormsSuggestionsPanel" className="card" style={{ padding: "var(--space-4)", marginBottom: "var(--space-3)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <h2 style={{ fontSize: 14, margin: 0 }}>Sugestões de campos detectados ({suggestions.length})</h2>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="btn btn-primary" onClick={acceptAllSuggestions}>Aceitar todas</button>
+              <button type="button" className="btn" onClick={discardAllSuggestions}>Descartar todas</button>
+            </div>
+          </div>
+          <p className="text-muted" style={{ fontSize: 12, margin: "0 0 8px" }}>
+            Detecção heurística local, com base em rótulos comuns, linhas em branco e glifos de caixa de seleção do
+            próprio texto do PDF — revise cada sugestão antes de aceitar; nenhum campo é criado sem confirmação.
+          </p>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+            {suggestions.map((s) => (
+              <li key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                <span style={{ flex: 1 }}>
+                  Página {s.pageIndex + 1} · {FIELD_KIND_LABELS[s.kind]} · "{s.sourceLabel}"
+                </span>
+                <button type="button" className="btn" onClick={() => acceptSuggestion(s)}>Aceitar</button>
+                <button type="button" className="btn-text" onClick={() => discardSuggestion(s.id)}>Descartar</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
         <div id="FormsCanvasArea" style={{ flex: 1, maxHeight: "70vh", overflow: "auto", background: "var(--surface-2)", padding: "var(--space-4)", borderRadius: "var(--radius-md)" }}>
@@ -419,6 +520,25 @@ export function FormsTool() {
                       </div>
                     );
                   })}
+                {suggestions
+                  .filter((s) => s.pageIndex === p.pageIndex)
+                  .map((s) => (
+                    <div
+                      key={s.id}
+                      title={`Sugestão: ${FIELD_KIND_LABELS[s.kind]} — "${s.sourceLabel}"`}
+                      style={{
+                        position: "absolute",
+                        left: s.x * zoom,
+                        top: s.y * zoom,
+                        width: Math.max(1, s.width * zoom),
+                        height: Math.max(1, s.height * zoom),
+                        border: "1.5px dashed #b5780a",
+                        background: "rgba(181,120,10,0.10)",
+                        boxSizing: "border-box",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  ))}
               </div>
             </div>
           ))}
