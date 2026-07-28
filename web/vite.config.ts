@@ -40,8 +40,9 @@ export default defineConfig({
         // Cacheia somente os recursos estáticos do build (JS/CSS/HTML/ícones).
         // NUNCA cacheia PDFs do usuário — nenhum documento passa pelo
         // service worker, então não há risco de um PDF ficar preso em cache.
-        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
+        globPatterns: ["**/*.{js,mjs,css,html,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
