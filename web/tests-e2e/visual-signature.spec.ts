@@ -125,3 +125,65 @@ test("assinatura visual: sem violações críticas de acessibilidade", async ({ 
   const critical = results.violations.filter((v) => v.impact === "critical");
   expect(critical).toEqual([]);
 });
+
+test("assinatura visual: opção 'incluir data/hora' anexa timestamp ao texto do carimbo", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Assinatura visual (carimbo)", exact: true }).first().click();
+  await page.setInputFiles('input[type="file"]', FIXTURE);
+  await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
+
+  await page.getByLabel("Incluir data/hora atual no texto").check();
+  await page.getByText("Apenas a primeira", { exact: true }).click();
+
+  await page.getByRole("button", { name: "Aplicar assinatura visual", exact: true }).click();
+  await expect(page.getByText("Concluído")).toBeVisible({ timeout: 15_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Baixar", exact: true }).click(),
+  ]);
+
+  const bytes = await readDownloadBytes(download);
+  const texts = await extractPageTexts(bytes);
+  expect(texts[0]).toContain("Assinado eletronicamente —");
+  expect(texts[0]).toMatch(/\d{4}/);
+});
+
+test("assinatura visual: arrastar a prévia define uma âncora livre, e 'redefinir' volta ao preset", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Assinatura visual (carimbo)", exact: true }).first().click();
+  await page.setInputFiles('input[type="file"]', FIXTURE);
+  await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
+
+  const preview = page.locator("#SignaturePreviewPage");
+  await expect(preview).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "Redefinir para posição predefinida", exact: true })).toHaveCount(0);
+
+  const box = await preview.boundingBox();
+  if (!box) throw new Error("preview bounding box unavailable");
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.5, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(page.getByRole("button", { name: "Redefinir para posição predefinida", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Redefinir para posição predefinida", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Redefinir para posição predefinida", exact: true })).toHaveCount(0);
+});
+
+test("assinatura visual: aplica com rotação sem erro e o resultado é baixado normalmente", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Assinatura visual (carimbo)", exact: true }).first().click();
+  await page.setInputFiles('input[type="file"]', FIXTURE);
+  await expect(page.getByText("3 páginas")).toBeVisible({ timeout: 15_000 });
+
+  const rotationSlider = page.getByRole("slider", { name: /Rotação/ });
+  await rotationSlider.fill("45");
+
+  await page.getByRole("button", { name: "Aplicar assinatura visual", exact: true }).click();
+  await expect(page.getByText("Concluído")).toBeVisible({ timeout: 15_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Baixar", exact: true }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/-assinado-visualmente\.pdf$/);
+});

@@ -475,6 +475,25 @@ export interface VisualSignatureOptions {
   marginPt?: number;
   /** Páginas (0-based) a carimbar. Omitido = todas as páginas. */
   pageIndices?: number[];
+  /**
+   * Âncora livre (origem superior-esquerda, em pontos PDF — mesmo referencial
+   * do Editor de PDF). Quando informada, sobrepõe o preset `position` para
+   * esta operação: o carimbo é posicionado exatamente neste ponto em vez de
+   * um dos 9 presets de grade.
+   */
+  anchorPt?: { x: number; y: number };
+  /** Rotação do carimbo em graus, sentido horário como visto na tela (0–359). Rotaciona em torno do centro do carimbo. */
+  rotationDeg?: number;
+}
+
+/** Mesma técnica de rotação-em-torno-do-centro usada no Editor de PDF (ver editorExport.ts). */
+function centerRotationAnchorStamp(centerX: number, centerY: number, halfW: number, halfH: number, angleDeg: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const rotatedOffsetX = halfW * cos - halfH * sin;
+  const rotatedOffsetY = halfW * sin + halfH * cos;
+  return { x: centerX - rotatedOffsetX, y: centerY - rotatedOffsetY };
 }
 
 function computeStampOrigin(
@@ -537,8 +556,15 @@ export async function addVisualSignature(
     if (options.content.kind === "image" && embeddedImage) {
       const stampWidth = desiredWidth;
       const stampHeight = stampWidth * (embeddedImage.height / embeddedImage.width);
-      const { x, y } = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
-      page.drawImage(embeddedImage, { x, y, width: stampWidth, height: stampHeight, opacity });
+      const preset = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
+      const origin = options.anchorPt
+        ? { x: options.anchorPt.x, y: pageHeight - options.anchorPt.y - stampHeight }
+        : preset;
+      const rotationDeg = options.rotationDeg ?? 0;
+      const drawAnchor = rotationDeg
+        ? centerRotationAnchorStamp(origin.x + stampWidth / 2, origin.y + stampHeight / 2, stampWidth / 2, stampHeight / 2, -rotationDeg)
+        : origin;
+      page.drawImage(embeddedImage, { x: drawAnchor.x, y: drawAnchor.y, width: stampWidth, height: stampHeight, opacity, rotate: rotationDeg ? degrees(rotationDeg) : undefined });
     } else if (font && options.content.kind === "text") {
       const text = options.content.text;
       const baseSize = 24;
@@ -547,8 +573,15 @@ export async function addVisualSignature(
       const stampWidth = font.widthOfTextAtSize(text, fontSize);
       const stampHeight = font.heightAtSize(fontSize);
       const { r, g, b } = hexToRgb01(options.content.colorHex ?? "#1D3557");
-      const { x, y } = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
-      page.drawText(text, { x, y, size: fontSize, font, color: rgb(r, g, b), opacity });
+      const preset = computeStampOrigin(options.position, pageWidth, pageHeight, stampWidth, stampHeight, marginPt);
+      const origin = options.anchorPt
+        ? { x: options.anchorPt.x, y: pageHeight - options.anchorPt.y - stampHeight }
+        : preset;
+      const rotationDeg = options.rotationDeg ?? 0;
+      const drawAnchor = rotationDeg
+        ? centerRotationAnchorStamp(origin.x + stampWidth / 2, origin.y + stampHeight / 2, stampWidth / 2, stampHeight / 2, -rotationDeg)
+        : origin;
+      page.drawText(text, { x: drawAnchor.x, y: drawAnchor.y, size: fontSize, font, color: rgb(r, g, b), opacity, rotate: rotationDeg ? degrees(rotationDeg) : undefined });
     }
     report(onProgress, i + 1, targetIndices.length, "Aplicando assinatura visual");
   }
