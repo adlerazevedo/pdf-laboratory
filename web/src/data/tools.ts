@@ -83,9 +83,9 @@ export const TOOLS: ToolDescriptor[] = [
   {
     id: "redaction",
     title: "Redação segura",
-    description: "Remoção definitiva e irreversível de conteúdo sensível.",
-    availability: "desktop-only",
-    limitationNote: "Requer reprocessamento profundo do PDF (qpdf) para garantir remoção real — disponível apenas no aplicativo desktop.",
+    description: "Detecta CPF/CNPJ/e-mail/telefone e remove de verdade o conteúdo marcado — a página inteira é reconstruída sem o texto original.",
+    availability: "limited",
+    limitationNote: "Para garantir remoção real sem um motor de reescrita de conteúdo (qpdf), a página inteira com alguma marcação é convertida em imagem — perde a camada de texto pesquisável da página toda, não só da área marcada. O aplicativo desktop preserva o texto pesquisável do restante da página.",
     icon: "redact",
   },
   {

@@ -26,6 +26,8 @@ import { applyEditorObjects } from "../lib/pdf/editorExport";
 import type { EditorObject } from "../lib/pdf/editorTypes";
 import { applyPageAdvancedOperations } from "../lib/pdf/pageAdvanced";
 import type { PageAdvancedOptions } from "../lib/pdf/pageAdvanced";
+import { applyRedactionRaster } from "../lib/pdf/redaction";
+import type { ApplyRedactionOptions } from "../lib/pdf/redaction";
 
 export type PdfWorkerRequest =
   | { id: string; kind: "extractPages"; bytes: Uint8Array; pageIndices: number[] }
@@ -47,6 +49,7 @@ export type PdfWorkerRequest =
     }
   | { id: string; kind: "applyEditorObjects"; bytes: Uint8Array; objects: EditorObject[] }
   | { id: string; kind: "applyPageAdvanced"; bytes: Uint8Array; options: PageAdvancedOptions }
+  | { id: string; kind: "applyRedaction"; bytes: Uint8Array; options: ApplyRedactionOptions }
   | { id: string; kind: "cancel" };
 
 export type PdfWorkerResponse =
@@ -149,6 +152,11 @@ self.onmessage = async (event: MessageEvent<PdfWorkerRequest>) => {
       }
       case "applyPageAdvanced": {
         const bytes = await applyPageAdvancedOperations(msg.bytes, msg.options, onProgress, token);
+        response = { id: msg.id, kind: "result", bytes };
+        break;
+      }
+      case "applyRedaction": {
+        const bytes = await applyRedactionRaster(msg.bytes, msg.options);
         response = { id: msg.id, kind: "result", bytes };
         break;
       }
