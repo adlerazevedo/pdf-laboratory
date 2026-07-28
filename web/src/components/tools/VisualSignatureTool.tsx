@@ -331,7 +331,7 @@ export function VisualSignatureTool() {
       <InlineAlert
         level="warning"
         title="Isto NÃO é uma assinatura digital"
-        message="É apenas um carimbo visual — sem validade jurídica ou criptográfica, e sem qualquer relação com certificados. Esta ferramenta nunca solicita nem processa arquivos PFX/P12. Para assinatura digital real com certificado ICP-Brasil, use o aplicativo desktop."
+        message="Este recurso aplica apenas uma representação visual. Não constitui assinatura digital ICP-Brasil. É apenas um carimbo visual — sem validade jurídica ou criptográfica, e sem qualquer relação com certificados. Esta ferramenta nunca solicita nem processa arquivos PFX/P12. Para assinatura digital real com certificado ICP-Brasil, use o aplicativo desktop."
       />
 
       <div style={{ height: "var(--space-4)" }} />

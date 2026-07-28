@@ -88,10 +88,10 @@ export const TOOLS: ToolDescriptor[] = [
   },
   {
     id: "digital-signature",
-    title: "Assinatura digital (ICP-Brasil)",
+    title: "Assinatura digital (ICP-Brasil) — Em desenvolvimento",
     description: "Assinatura criptográfica com certificado PFX/P12.",
     availability: "desktop-only",
-    limitationNote: "Certificados PFX/P12 nunca devem ser carregados em um navegador — disponível apenas no aplicativo desktop.",
+    limitationNote: "Em desenvolvimento — ainda NÃO implementada nesta versão. Não aceita, solicita nem processa certificados PFX/P12 ou senhas; não realiza nem simula qualquer operação criptográfica; não gera nem afirma produzir uma assinatura com validade ICP-Brasil. Certificados PFX/P12 nunca devem ser carregados em um navegador.",
     icon: "signature",
   },
   {
