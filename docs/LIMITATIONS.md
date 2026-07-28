@@ -95,9 +95,7 @@ que nunca deve entrar em um navegador. Permanecerão exclusivas do desktop:
 
 - Otimização avançada via Ghostscript.
 - Conversão fiel Word/Excel/PowerPoint ↔ PDF via LibreOffice.
-- Assinatura digital criptográfica com certificado PFX/P12 (ICP-Brasil).
 - Reparo avançado de arquivos corrompidos via qpdf.
-- Redação (censura) definitiva e irreversível de conteúdo sensível.
 
 Se uma dessas funcionalidades se tornar essencial para a versão web no
 futuro, a solução correta **não** é reimplementá-la de forma incompleta no
@@ -105,6 +103,27 @@ navegador — é propor um serviço de backend dedicado, com uma análise
 explícita de tecnologia, hospedagem, custo, retenção de dados, criptografia,
 privacidade e risco, sujeita a aprovação explícita antes de qualquer
 implementação.
+
+## Web — Redação segura (remoção real, com uma limitação clara)
+
+Diferente do restante desta lista, a Redação segura **já existe na versão
+web** (ver `docs/PDF_EDITOR.md` e `web/src/lib/pdf/redaction.ts`), mas com
+uma limitação técnica honesta: como o pdf-lib não reescreve fluxos de
+conteúdo existentes, a única forma desta versão GARANTIR remoção real
+(sem depender de qpdf/pikepdf, exclusivos do desktop) é rasterizar a
+PÁGINA INTEIRA que contém alguma marcação — a página perde toda a sua
+camada de texto pesquisável, não só a área marcada. Páginas sem nenhuma
+marcação continuam com o texto original intacto. Isto foi verificado por
+teste automatizado (unitário e e2e): após a redação, `pdfjs` não encontra
+nenhum item de texto nas páginas marcadas, e o texto das páginas não
+marcadas permanece extraível normalmente.
+
+Sobre a assinatura digital criptográfica com certificado PFX/P12: a
+posição anterior deste documento (nunca permitir PFX em um navegador) foi
+reconsiderada para permitir uma implementação 100% local (Worker
+dedicado, sem envio a servidor, sem persistência) — ver
+`docs/ICP_BRASIL.md` quando essa fase for implementada. Até lá, esta
+funcionalidade continua exclusiva do aplicativo desktop.
 
 ## Web — exclusivo do desktop por enquanto (não por design permanente)
 

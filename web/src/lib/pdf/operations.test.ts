@@ -381,10 +381,59 @@ describe("addVisualSignature", () => {
       "opacity",
       "marginPt",
       "pageIndices",
+      "anchorPt",
+      "rotationDeg",
     ];
     expect(optionsShape).not.toContain("certificate");
     expect(optionsShape).not.toContain("pfx");
     expect(optionsShape).not.toContain("p12");
+  });
+
+  it("com anchorPt, posiciona o carimbo de texto perto do ponto informado (origem superior-esquerda), ignorando o preset position", async () => {
+    const bytes = await makeSyntheticPdf(1);
+    const out = await addVisualSignature(bytes, {
+      content: { kind: "text", text: "X" },
+      position: "bottom-right", // deve ser ignorado por causa do anchorPt
+      scalePercent: 10,
+      anchorPt: { x: 60, y: 40 },
+    });
+
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const loadingTask = pdfjsLib.getDocument({ data: out, useWorkerFetch: false, isEvalSupported: false });
+    const doc = await loadingTask.promise;
+    const page = await doc.getPage(1);
+    const viewport = page.getViewport({ scale: 1 });
+    const content = await page.getTextContent();
+    const stampItem = content.items.find((it: unknown) => (it as { str?: string }).str === "X") as
+      | { transform: number[]; height?: number }
+      | undefined;
+    expect(stampItem).toBeTruthy();
+    const [, , , , tx, ty] = stampItem!.transform;
+    const topLeftX = tx;
+    const topLeftY = viewport.height - ty - (stampItem!.height ?? 0);
+    // tolerância generosa: a âncora informada é o topo do retângulo do carimbo,
+    // e a posição exata do glifo depende de métricas de fonte.
+    expect(topLeftX).toBeGreaterThanOrEqual(55);
+    expect(topLeftX).toBeLessThan(80);
+    expect(topLeftY).toBeGreaterThanOrEqual(35);
+    expect(topLeftY).toBeLessThan(60);
+  });
+
+  it("com rotationDeg, aplica a rotação ao carimbo sem lançar erro e o texto continua extraível", async () => {
+    const bytes = await makeSyntheticPdf(1);
+    const out = await addVisualSignature(bytes, {
+      content: { kind: "text", text: "ROTACIONADO" },
+      position: "middle-center",
+      scalePercent: 40,
+      rotationDeg: 45,
+    });
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const loadingTask = pdfjsLib.getDocument({ data: out, useWorkerFetch: false, isEvalSupported: false });
+    const doc = await loadingTask.promise;
+    const page = await doc.getPage(1);
+    const content = await page.getTextContent();
+    const text = content.items.map((it: unknown) => (it as { str?: string }).str ?? "").join(" ");
+    expect(text).toContain("ROTACIONADO");
   });
 });
 

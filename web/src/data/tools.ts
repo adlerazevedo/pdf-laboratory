@@ -8,7 +8,36 @@ import type { ToolDescriptor } from "../lib/pdf/types";
  *    nunca vira um botão ativo falso; mostra "Disponível no aplicativo desktop".
  */
 export const TOOLS: ToolDescriptor[] = [
+  {
+    id: "edit",
+    title: "Editar PDF",
+    description: "Adicione texto, imagens, formas e links diretamente sobre as páginas do seu PDF.",
+    availability: "limited",
+    limitationNote: "Isto adiciona novos objetos sobre o conteúdo existente — não reescreve texto já existente no PDF (edição real de texto incorporado tem suporte limitado; veja docs/PDF_EDITOR.md).",
+    icon: "edit",
+  },
   { id: "merge", title: "Unir PDFs", description: "Combine vários arquivos PDF em um único documento, na ordem que você escolher.", availability: "browser", icon: "merge" },
+  {
+    id: "forms",
+    title: "Formulários (AcroForm)",
+    description: "Crie campos de formulário reais — texto, caixas de seleção, opções, listas — clicando sobre as páginas do PDF.",
+    availability: "browser",
+    icon: "form",
+  },
+  {
+    id: "form-fill",
+    title: "Preencher formulário",
+    description: "Abra um PDF com campos de formulário já existentes e preencha os valores, com opção de achatar ao salvar.",
+    availability: "browser",
+    icon: "form-fill",
+  },
+  {
+    id: "page-tools",
+    title: "Ferramentas de página avançadas",
+    description: "Caixas de página (CropBox), numeração Bates, anexos, marcadores e links internos.",
+    availability: "browser",
+    icon: "bookmarks",
+  },
   { id: "split", title: "Dividir PDF", description: "Separe um PDF em vários arquivos por intervalos de página.", availability: "browser", icon: "split" },
   { id: "organize", title: "Organizar páginas", description: "Reordene, gire, duplique, exclua e insira páginas em branco.", availability: "browser", icon: "organize" },
   { id: "extract", title: "Extrair páginas", description: "Salve um subconjunto de páginas como um novo PDF.", availability: "browser", icon: "extract" },
@@ -59,18 +88,18 @@ export const TOOLS: ToolDescriptor[] = [
   },
   {
     id: "digital-signature",
-    title: "Assinatura digital (ICP-Brasil)",
+    title: "Assinatura digital (ICP-Brasil) — Em desenvolvimento",
     description: "Assinatura criptográfica com certificado PFX/P12.",
     availability: "desktop-only",
-    limitationNote: "Certificados PFX/P12 nunca devem ser carregados em um navegador — disponível apenas no aplicativo desktop.",
+    limitationNote: "Em desenvolvimento — ainda NÃO implementada nesta versão. Não aceita, solicita nem processa certificados PFX/P12 ou senhas; não realiza nem simula qualquer operação criptográfica; não gera nem afirma produzir uma assinatura com validade ICP-Brasil. Certificados PFX/P12 nunca devem ser carregados em um navegador.",
     icon: "signature",
   },
   {
     id: "redaction",
     title: "Redação segura",
-    description: "Remoção definitiva e irreversível de conteúdo sensível.",
-    availability: "desktop-only",
-    limitationNote: "Requer reprocessamento profundo do PDF (qpdf) para garantir remoção real — disponível apenas no aplicativo desktop.",
+    description: "Detecta CPF/CNPJ/e-mail/telefone e remove de verdade o conteúdo marcado — a página inteira é reconstruída sem o texto original.",
+    availability: "limited",
+    limitationNote: "Para garantir remoção real sem um motor de reescrita de conteúdo (qpdf), a página inteira com alguma marcação é convertida em imagem — perde a camada de texto pesquisável da página toda, não só da área marcada. O aplicativo desktop preserva o texto pesquisável do restante da página.",
     icon: "redact",
   },
   {
@@ -108,7 +137,7 @@ export const TOOLS: ToolDescriptor[] = [
 ];
 
 export const TOOLS_PRINCIPAIS = TOOLS.filter((t) =>
-  ["merge", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress"].includes(t.id),
+  ["edit", "merge", "forms", "form-fill", "split", "organize", "extract", "images-to-pdf", "pdf-to-images", "watermark", "page-numbers", "metadata", "compress", "page-tools"].includes(t.id),
 );
 
 export const TOOLS_SEGURANCA = TOOLS.filter((t) =>

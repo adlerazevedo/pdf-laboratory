@@ -26,7 +26,14 @@ export interface RunOptions {
 }
 
 /** Envia uma requisição ao Web Worker de PDF e resolve quando o resultado chegar. */
-export function runInWorker<T extends { bytes: Uint8Array } | { documents: Uint8Array[] } | { result: CompressionResult }>(
+export function runInWorker<
+  T extends
+    | { bytes: Uint8Array }
+    | { documents: Uint8Array[] }
+    | { result: CompressionResult }
+    | { bytes: Uint8Array; signaturePlaceholders: Array<{ name: string; pageIndex: number }>; hadXFA: boolean }
+    | { bytes: Uint8Array; skippedReadOnly: string[] },
+>(
   request: DistributiveOmit<PdfWorkerRequest, "id">,
   options: RunOptions = {},
 ): { promise: Promise<T>; cancel: () => void } {
@@ -48,6 +55,12 @@ export function runInWorker<T extends { bytes: Uint8Array } | { documents: Uint8
       } else if (msg.kind === "resultCompression") {
         cleanup();
         resolve({ result: msg.result } as T);
+      } else if (msg.kind === "resultForm") {
+        cleanup();
+        resolve({ bytes: msg.bytes, signaturePlaceholders: msg.signaturePlaceholders, hadXFA: msg.hadXFA } as T);
+      } else if (msg.kind === "resultFill") {
+        cleanup();
+        resolve({ bytes: msg.bytes, skippedReadOnly: msg.skippedReadOnly } as T);
       } else if (msg.kind === "error") {
         cleanup();
         if (msg.name === "OperationCancelledError") reject(new OperationCancelledError());

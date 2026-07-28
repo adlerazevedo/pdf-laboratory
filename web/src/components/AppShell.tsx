@@ -109,8 +109,15 @@ export function AppShell({ activeToolId, onNavigateHome, onNavigateTool, onClear
         }}
       >
         <p id="SidebarBrand" style={{ fontWeight: 700, margin: "0 0 2px" }}>PDF Laboratory</p>
-        <p id="SidebarSubtitle" className="text-muted" style={{ fontSize: 12, margin: "0 0 var(--space-4)" }}>
+        <p id="SidebarSubtitle" className="text-muted" style={{ fontSize: 12, margin: "0 0 2px" }}>
           Local • Privado • Offline
+        </p>
+        <p
+          id="VersionBadge"
+          className="text-muted"
+          style={{ fontSize: 11, margin: "0 0 var(--space-4)", fontStyle: "italic" }}
+        >
+          Versão de testes pré-ICP-Brasil
         </p>
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           {TOOLS.map((tool) => (
